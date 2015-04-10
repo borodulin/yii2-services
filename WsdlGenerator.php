@@ -246,7 +246,7 @@ class WsdlGenerator extends \yii\base\Component
 		if($this->namespace===null)
 			$this->namespace='urn:'.str_replace('\\','/',$className).'wsdl';
 
-		$reflection=new ReflectionClass($className);
+		$reflection=new \ReflectionClass($className);
 		foreach($reflection->getMethods() as $method)
 		{
 			if($method->isPublic())
@@ -380,7 +380,7 @@ class WsdlGenerator extends \yii\base\Component
 		else
 		{	// process class / complex type
 			$type=Yii::import($type,true);
-			$class=new ReflectionClass($type);
+			$class=new \ReflectionClass($type);
 
 			$comment=$class->getDocComment();
 			$comment=strtr($comment,array("\r\n"=>"\n","\r"=>"\n")); // make line endings consistent: win -> unix, mac -> unix
@@ -481,7 +481,7 @@ class WsdlGenerator extends \yii\base\Component
 	* @param DOMElement $target XML node, to which will be appended $source node
 	* @param DOMNode $source Source XML node to be imported
 	*/
-	protected function injectDom(DOMDocument $dom, DOMElement $target, DOMNode $source)
+	protected function injectDom(\DOMDocument $dom, DOMElement $target, DOMNode $source)
 	{
 		if ($source->nodeType!=XML_ELEMENT_NODE)
 			return;
@@ -512,7 +512,7 @@ class WsdlGenerator extends \yii\base\Component
 	 xmlns:wsdl=\"http://schemas.xmlsoap.org/wsdl/\"
 	 xmlns:soap-enc=\"http://schemas.xmlsoap.org/soap/encoding/\"></definitions>";
 
-		$dom=new DOMDocument();
+		$dom=new \DOMDocument();
 		$dom->formatOutput=true;
 		$dom->loadXml($xml);
 		$this->addTypes($dom);
@@ -579,7 +579,7 @@ class WsdlGenerator extends \yii\base\Component
 				$complexType->setAttribute('name',$phpType);
 				if($xmlType['custom_wsdl']!==false)
 				{
-					$custom_dom=new DOMDocument();
+					$custom_dom=new \DOMDocument();
 					$custom_dom->loadXML('<root xmlns:xsd="http://www.w3.org/2001/XMLSchema">'.$xmlType['custom_wsdl'].'</root>');
 					foreach($custom_dom->documentElement->childNodes as $el)
 						$this->injectDom($dom,$complexType,$el);

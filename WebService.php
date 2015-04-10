@@ -90,7 +90,7 @@ class WebService extends \yii\base\Component
 	 * to {@link Yii::createComponent} to create the generator object. Default value is 'CWsdlGenerator'.
 	 * @since 1.1.12
 	 */
-	public $generatorConfig='WsdlGenerator';
+	public $generatorConfig='conquer\services\WsdlGenerator';
 
 	private $_method;
 
@@ -133,8 +133,9 @@ class WebService extends \yii\base\Component
 	{
 		$wsdl=$this->generateWsdl();
 		$response=\Yii::$app->response;
-		$response->format=Response::FORMAT_XML;
 		$response->charset=$this->encoding;
+		$response->format=Response::FORMAT_RAW;
+		$response->headers->add('Content-Type', 'text/xml');
 	//	header('Content-Length: '.(function_exists('mb_strlen') ? mb_strlen($wsdl,'8bit') : strlen($wsdl)));
 		return $wsdl;
 	}
@@ -172,8 +173,9 @@ class WebService extends \yii\base\Component
 	public function run()
 	{
 		$response=\Yii::$app->response;
-		$response->format=Response::FORMAT_XML;
+		$response->format=Response::FORMAT_RAW;
 		$response->charset=$this->encoding;
+		$response->headers->add('Content-Type', 'text/xml');
 		if(YII_DEBUG)
 			ini_set("soap.wsdl_cache_enabled",0);
 		$server=new SoapServer($this->wsdlUrl,$this->getOptions());
