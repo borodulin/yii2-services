@@ -27,28 +27,31 @@ to the ```require``` section of your `composer.json` file.
 ## Usage
 
 ```php
-public function actions()
+namespace app\controllers;
+
+class SiteController extends \yii\web\Controller
 {
-    return [
-        ...,
-        'soap' => [
-            'class' => 'conquer\services\WebServiceAction',
-            'classMap' = ['MyClass'=>'app\controllers\MyClass'],
-        ],
-        ...,
-    ];
+    public function actions()
+    {
+        return [
+            'soap' => [
+                'class' => 'conquer\services\WebServiceAction',
+                'classMap' = ['MyClass'=>'app\controllers\MyClass'],
+            ],
+        ];
+    }
+
+    /**
+     * @param app\controllers\MyClass $myClass
+     * @return string
+     * @soap
+     */
+    public function soapTest($myClass)
+    {
+        return get_class($myclass);
+    }
 }
-...,
-/**
- * @param app\controllers\MyClass $myClass
- * @return string
- * @soap
- */
-public function soapTest($myClass)
-{
-    return get_class($myclass);
-}
-...,
+
 class MyClass
 {
     /**
