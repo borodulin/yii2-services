@@ -1,4 +1,9 @@
 <?php
+/**
+ * @link https://github.com/borodulin/yii2-services
+ * @copyright Copyright (c) 2015 Andrey Borodulin
+ * @license https://github.com/borodulin/yii2-services/blob/master/LICENSE.md
+ */
 
 namespace conquer\services;
 
@@ -15,13 +20,13 @@ interface IWebServiceProvider
 {
 	/**
 	 * This method is invoked before the requested remote method is invoked.
-	 * @param CWebService $service the currently requested Web service.
+	 * @param WebService $service the currently requested Web service.
 	 * @return boolean whether the remote method should be executed.
 	 */
 	public function beforeWebMethod($service);
 	/**
 	 * This method is invoked after the requested remote method is invoked.
-	 * @param CWebService $service the currently requested Web service.
+	 * @param WebService $service the currently requested Web service.
 	*/
 	public function afterWebMethod($service);
 }
