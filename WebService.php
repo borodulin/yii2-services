@@ -1,11 +1,8 @@
 <?php
 /**
- * CWebService class file.
- *
- * @author Qiang Xue <qiang.xue@gmail.com>
- * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
- * @license http://www.yiiframework.com/license/
+ * @link https://github.com/borodulin/yii2-services
+ * @copyright Copyright (c) 2015 Andrey Borodulin
+ * @license https://github.com/borodulin/yii2-services/blob/master/LICENSE.md
  */
 
 namespace conquer\services;
@@ -14,11 +11,11 @@ use yii\base\Object;
 use yii\base\Application;
 use yii\web\Response;
 /**
- * CWebService encapsulates SoapServer and provides a WSDL-based web service.
+ * WebService encapsulates SoapServer and provides a WSDL-based web service.
  *
  * PHP SOAP extension is required.
  *
- * CWebService makes use of {@link CWsdlGenerator} and can generate the WSDL
+ * WebService makes use of {@link WsdlGenerator} and can generate the WSDL
  * on-the-fly without requiring you to write complex WSDL. However WSDL generator
  * could be customized through {@link generatorConfig} property.
  *
@@ -63,9 +60,10 @@ class WebService extends \yii\base\Component
 	 */
 	public $encoding='UTF-8';
 	/**
-	 * @var array a list of classes that are declared as complex types in WSDL.
+	 * A list of classes that are declared as complex types in WSDL.
 	 * This should be an array with WSDL types as keys and names of PHP classes as values.
 	 * A PHP class can also be specified as a path alias.
+	 * @var array
 	 * @see http://www.php.net/manual/en/soapserver.soapserver.php
 	 */
 	public $classMap=array();
@@ -83,14 +81,15 @@ class WebService extends \yii\base\Component
 	 */
 	public $persistence;
 	/**
-	 * @var string|array WSDL generator configuration. This property may be useful in purpose of enhancing features
-	 * of the standard {@link CWsdlGenerator} class by extending it. For example, some developers may need support
+	 * WSDL generator configuration. This property may be useful in purpose of enhancing features
+	 * of the standard {@link WsdlGenerator} class by extending it. For example, some developers may need support
 	 * of the <code>xsd:xsd:base64Binary</code> elements. Another use case is to change initial values
-	 * at instantiation of the default {@link CWsdlGenerator}. The value of this property will be passed
-	 * to {@link Yii::createComponent} to create the generator object. Default value is 'CWsdlGenerator'.
+	 * at instantiation of the default {@link WsdlGenerator}. The value of this property will be passed
+	 * to {@link \Yii::createObject()} to create the generator object. Default value is 'WsdlGenerator'.
+	 * @var string|array
 	 * @since 1.1.12
 	 */
-	public $generatorConfig='conquer\services\WsdlGenerator';
+	public $generatorConfig;
 
 	private $_method;
 
@@ -106,6 +105,7 @@ class WebService extends \yii\base\Component
 		$this->provider=$provider;
 		$this->wsdlUrl=$wsdlUrl;
 		$this->serviceUrl=$serviceUrl;
+		$this->generatorConfig=WsdlGenerator::className();
 	}
 
 	/**
@@ -156,7 +156,7 @@ class WebService extends \yii\base\Component
 		}
 		if($this->wsdlCacheDuration>0 && $this->cacheID!==false && ($cache=\Yii::$app->get($this->cacheID,false))!==null)
 		{
-			$key='Yii.CWebService.'.$providerClass.$this->serviceUrl.$this->encoding;
+			$key='Yii.WebService.'.$providerClass.$this->serviceUrl.$this->encoding;
 			if(($wsdl=$cache->get($key))!==false)
 				return $wsdl;
 		}

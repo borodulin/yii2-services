@@ -1,17 +1,14 @@
 <?php
 /**
- * CWsdlGenerator class file.
- *
- * @author Qiang Xue <qiang.xue@gmail.com>
- * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
- * @license http://www.yiiframework.com/license/
+ * @link https://github.com/borodulin/yii2-services
+ * @copyright Copyright (c) 2015 Andrey Borodulin
+ * @license https://github.com/borodulin/yii2-services/blob/master/LICENSE.md
  */
 
 namespace conquer\services;
 
 /**
- * CWsdlGenerator generates the WSDL for a given service class.
+ * WsdlGenerator generates the WSDL for a given service class.
  *
  * The WSDL generation is based on the doc comments found in the service class file.
  * In particular, it recognizes the '@soap' tag in the comment and extracts
@@ -22,7 +19,7 @@ namespace conquer\services;
  * of every input parameter and the type of the return value should be declared using
  * the standard phpdoc format.
  *
- * CWsdlGenerator recognizes the following primitive types (case-sensitive) in
+ * WsdlGenerator recognizes the following primitive types (case-sensitive) in
  * the parameter and return type declarations:
  * <ul>
  * <li>str/string: maps to xsd:string;</li>
@@ -38,11 +35,11 @@ namespace conquer\services;
  * </ul>
  *
  * If a type is not a primitive type, it is considered as a class type, and
- * CWsdlGenerator will look for its property declarations. Only public properties
+ * WsdlGenerator will look for its property declarations. Only public properties
  * are considered, and they each must be associated with a doc comment block containg
  * the '@soap' tag. The doc comment block should declare the type of the property.
  *
- * CWsdlGenerator recognizes the array type with the following format:
+ * WsdlGenerator recognizes the array type with the following format:
  * <pre>
  * typeName[]: maps to tns:typeNameArray
  * </pre>
@@ -75,7 +72,7 @@ namespace conquer\services;
  * }
  * </pre>
  * In the above, the 'members' property is an array of 'Member' objects. Since 'Member' is not
- * a primitive type, CWsdlGenerator will look further to find the definition of 'Member'.
+ * a primitive type, WsdlGenerator will look further to find the definition of 'Member'.
  *
  * Optionally, extra attributes (nillable, minOccurs, maxOccurs) can be defined for each
  * property by enclosing definitions into curly brackets and separated by comma like so:
@@ -243,13 +240,12 @@ class WsdlGenerator extends \yii\base\Component
 		$this->messages=array();
 		
 		$reflection=new \ReflectionClass($className);
-		$shortName=$reflection->getShortName();
+
 		if($this->serviceName===null)
-			$this->serviceName=$shortName;
+			$this->serviceName=$reflection->getShortName();
 
  		if($this->namespace===null)
  			$this->namespace='urn:'.str_replace('\\','/',$className).'wsdl';
-
 		
 		foreach($reflection->getMethods() as $method)
 		{

@@ -1,11 +1,8 @@
 <?php
 /**
- * CWebServiceAction class file.
- *
- * @author Qiang Xue <qiang.xue@gmail.com>
- * @link http://www.yiiframework.com/
- * @copyright 2008-2013 Yii Software LLC
- * @license http://www.yiiframework.com/license/
+ * @link https://github.com/borodulin/yii2-services
+ * @copyright Copyright (c) 2015 Andrey Borodulin
+ * @license https://github.com/borodulin/yii2-services/blob/master/LICENSE.md
  */
 
 namespace conquer\services;
@@ -13,21 +10,21 @@ namespace conquer\services;
 use yii\base\Action;
 use yii\helpers\Url;
 /**
- * CWebServiceAction implements an action that provides Web services.
+ * WebServiceAction implements an action that provides Web services.
  *
- * CWebServiceAction serves for two purposes. On the one hand, it displays
+ * WebServiceAction serves for two purposes. On the one hand, it displays
  * the WSDL content specifying the Web service APIs. On the other hand, it
  * invokes the requested Web service API. A GET parameter named <code>ws</code>
  * is used to differentiate these two aspects: the existence of the GET parameter
  * indicates performing the latter action.
  *
- * By default, CWebServiceAction will use the current controller as
- * the Web service provider. See {@link CWsdlGenerator} on how to declare
+ * By default, WebServiceAction will use the current controller as
+ * the Web service provider. See {@link WsdlGenerator} on how to declare
  * methods that can be remotely invoked.
  *
  * Note, PHP SOAP extension is required for this action.
  *
- * @property CWebService $service The Web service instance.
+ * @property WebService $service The Web service instance.
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @package system.web.services
@@ -70,8 +67,8 @@ class WebServiceAction extends \yii\base\Action
 	 */
 	public $classMap;
 	/**
-	 * @var array the initial property values for the {@link CWebService} object.
-	 * The array keys are property names of {@link CWebService} and the array values
+	 * @var array the initial property values for the {@link WebService} object.
+	 * The array keys are property names of {@link WebService} and the array values
 	 * are the corresponding property initial values.
 	 */
 	public $serviceOptions=array();
@@ -119,7 +116,7 @@ class WebServiceAction extends \yii\base\Action
 
 	/**
 	 * Returns the Web service instance currently being used.
-	 * @return CWebService the Web service instance
+	 * @return WebService the Web service instance
 	 */
 	public function getService()
 	{
@@ -127,12 +124,12 @@ class WebServiceAction extends \yii\base\Action
 	}
 
 	/**
-	 * Creates a {@link CWebService} instance.
+	 * Creates a {@link WebService} instance.
 	 * You may override this method to customize the created instance.
 	 * @param mixed $provider the web service provider class name or object
 	 * @param string $wsdlUrl the URL for WSDL.
 	 * @param string $serviceUrl the URL for the Web service.
-	 * @return CWebService the Web service instance
+	 * @return WebService the Web service instance
 	 */
 	protected function createWebService($provider,$wsdlUrl,$serviceUrl)
 	{
