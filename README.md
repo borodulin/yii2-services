@@ -1,1 +1,64 @@
-# yii2-services
+Web Service for Yii2 framework
+=================
+
+## Description
+
+WebService encapsulates SoapServer and provides a WSDL-based web service.
+
+Adaptation of Yii1 Web Services 
+
+## Installation
+
+The preferred way to install this extension is through [composer](http://getcomposer.org/download/). 
+
+To install, either run
+
+```
+$ php composer.phar require conquer/services "*"
+```
+or add
+
+```
+"conquer/services": "*"
+```
+
+to the ```require``` section of your `composer.json` file.
+
+## Usage
+
+```php
+public function actions()
+{
+    return [
+        ...,
+        'soap' => [
+            'class' => 'conquer\services\WebServiceAction',
+            'classMap' = ['MyClass'=>'app\controllers\MyClass'],
+        ],
+        ...,
+    ];
+}
+...,
+/**
+ * @param app\controllers\MyClass $myClass
+ * @return string
+ * @soap
+ */
+public function soapTest($myClass)
+{
+    return get_class($myclass);
+}
+...,
+class MyClass
+{
+    /**
+     * @var string
+     * @soap
+     */
+    public $name;
+}
+```
+
+## License
+
+**conquer/services** is released under the MIT License. See the bundled `LICENSE.md` for details.
