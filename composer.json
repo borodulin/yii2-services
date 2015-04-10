@@ -2,7 +2,7 @@
     "name": "conquer/services",
     "description": "Conquer soap services",
     "keywords": ["yii2", "extension", "wsdl", "services", "soap"],
-    "homepage": "https://github.com/borodulin/yii2-peity",
+    "homepage": "https://github.com/borodulin/yii2-services",
     "type": "yii2-extension",
     "license": "MIT",
     "authors": [
