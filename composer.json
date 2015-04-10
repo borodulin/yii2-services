@@ -1,6 +1,6 @@
 {
     "name": "conquer/services",
-    "description": "Conquer soap services",
+    "description": "Yii2 soap wsdl web services",
     "keywords": ["yii2", "extension", "wsdl", "services", "soap"],
     "homepage": "https://github.com/borodulin/yii2-services",
     "type": "yii2-extension",
