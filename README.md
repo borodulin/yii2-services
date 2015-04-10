@@ -40,7 +40,6 @@ class SiteController extends \yii\web\Controller
             ],
         ];
     }
-
     /**
      * @param app\controllers\MyClass $myClass
      * @return string
