@@ -1,20 +1,24 @@
 <?php
 /**
- * @link https://github.com/borodulin/yii2-services
- * @copyright Copyright (c) 2015 Andrey Borodulin
- * @license https://github.com/borodulin/yii2-services/blob/master/LICENSE.md
+ * CWebService class file.
+ *
+ * @author Qiang Xue <qiang.xue@gmail.com>
+ * @link http://www.yiiframework.com/
+ * @copyright 2008-2013 Yii Software LLC
+ * @license http://www.yiiframework.com/license/
  */
+
 namespace conquer\services;
 
 use yii\base\Object;
 use yii\base\Application;
 use yii\web\Response;
 /**
- * WebService encapsulates SoapServer and provides a WSDL-based web service.
+ * CWebService encapsulates SoapServer and provides a WSDL-based web service.
  *
  * PHP SOAP extension is required.
  *
- * WebService makes use of {@link WsdlGenerator} and can generate the WSDL
+ * CWebService makes use of {@link CWsdlGenerator} and can generate the WSDL
  * on-the-fly without requiring you to write complex WSDL. However WSDL generator
  * could be customized through {@link generatorConfig} property.
  *
@@ -279,7 +283,7 @@ class WebService extends \yii\base\Component
 		$options['encoding']=$this->encoding;
 		foreach($this->classMap as $type=>$className)
 		{
-			$className=Yii::import($className,true);
+			\Yii::autoload($className);
 			if(is_int($type))
 				$type=$className;
 			$options['classmap'][$type]=$className;

@@ -241,12 +241,16 @@ class WsdlGenerator extends \yii\base\Component
 		$this->types=array();
 		$this->elements=array();
 		$this->messages=array();
-		if($this->serviceName===null)
-			$this->serviceName=$className;
-		if($this->namespace===null)
-			$this->namespace='urn:'.str_replace('\\','/',$className).'wsdl';
-
+		
 		$reflection=new \ReflectionClass($className);
+		$shortName=$reflection->getShortName();
+		if($this->serviceName===null)
+			$this->serviceName=$shortName;
+
+ 		if($this->namespace===null)
+ 			$this->namespace='urn:'.str_replace('\\','/',$className).'wsdl';
+
+		
 		foreach($reflection->getMethods() as $method)
 		{
 			if($method->isPublic())
@@ -276,7 +280,7 @@ class WsdlGenerator extends \yii\base\Component
 		$params=$method->getParameters();
 		$message=array();
 		$headers=array();
-		$n=preg_match_all('/^@param\s+([\w\.]+(\[\s*\])?)\s*?(.*)$/im',$comment,$matches);
+		$n=preg_match_all('/^@param\s+([\w\.\\\]+(\[\s*\])?)\s*?(.*)$/im',$comment,$matches);
 		if($n>count($params))
 			$n=count($params);
 		if ($this->bindingStyle == self::STYLE_RPC)
@@ -300,7 +304,7 @@ class WsdlGenerator extends \yii\base\Component
 
 		$this->messages[$methodName.'In']=$message;
 
-		$n=preg_match_all('/^@header\s+([\w\.]+(\[\s*\])?)\s*?(.*)$/im',$comment,$matches);
+		$n=preg_match_all('/^@header\s+([\w\.\\\]+(\[\s*\])?)\s*?(.*)$/im',$comment,$matches);
 		for($i=0;$i<$n;++$i)
 		{
 			$name = $matches[1][$i];
@@ -331,7 +335,7 @@ class WsdlGenerator extends \yii\base\Component
 
 		if ($this->bindingStyle == self::STYLE_RPC)
 		{
-			if(preg_match('/^@return\s+([\w\.]+(\[\s*\])?)\s*?(.*)$/im',$comment,$matches))
+			if(preg_match('/^@return\s+([\w\.\\\]+(\[\s*\])?)\s*?(.*)$/im',$comment,$matches))
 				$return=array(
 					'type'=>$this->processType($matches[1]),
 					'doc'=>trim($matches[2]),
@@ -342,7 +346,7 @@ class WsdlGenerator extends \yii\base\Component
 		}
 		else
 		{
-			if(preg_match('/^@return\s+([\w\.]+(\[\s*\])?)\s*?(.*)$/im',$comment,$matches))
+			if(preg_match('/^@return\s+([\w\.\\\]+(\[\s*\])?)\s*?(.*)$/im',$comment,$matches))
 			{
 				$this->elements[$methodName.'Response'][$methodName.'Result']=array(
 					'type'=>$this->processType($matches[1]),
@@ -379,8 +383,10 @@ class WsdlGenerator extends \yii\base\Component
 		}
 		else
 		{	// process class / complex type
-			$type=Yii::import($type,true);
+			\Yii::autoload($type);
 			$class=new \ReflectionClass($type);
+			
+			$type=$class->getShortName();
 
 			$comment=$class->getDocComment();
 			$comment=strtr($comment,array("\r\n"=>"\n","\r"=>"\n")); // make line endings consistent: win -> unix, mac -> unix
@@ -415,7 +421,7 @@ class WsdlGenerator extends \yii\base\Component
 				$comment=$property->getDocComment();
 				if($property->isPublic() && strpos($comment,'@soap')!==false)
 				{
-					if(preg_match('/@var\s+([\w\.]+(\[\s*\])?)\s*?(.*)$/mi',$comment,$matches))
+					if(preg_match('/@var\s+([\w\.\\\]+(\[\s*\])?)\s*?(.*)$/mi',$comment,$matches))
 					{
 						$attributes=$this->getWsdlElementAttributes($matches[3]);
 
@@ -428,7 +434,7 @@ class WsdlGenerator extends \yii\base\Component
 							$example=trim($match[1]);
 
 						$this->types[$type]['properties'][$property->getName()]=array(
-							$this->processType($matches[1]),
+							$this->processType(str_replace('\\','/',$matches[1])),
 							trim($matches[3]),
 							$attributes['nillable'],
 							$attributes['minOccurs'],
@@ -576,7 +582,11 @@ class WsdlGenerator extends \yii\base\Component
 			}
 			elseif(is_array($xmlType))
 			{
-				$complexType->setAttribute('name',$phpType);
+				$pathInfo = pathinfo(str_replace('\\', '/', $phpType));
+				
+				$complexType->setAttribute('name', $pathInfo['basename']);
+				
+				//$complexType->setAttribute('name',$phpType);
 				if($xmlType['custom_wsdl']!==false)
 				{
 					$custom_dom=new \DOMDocument();
