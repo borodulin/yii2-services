@@ -1,0 +1,29 @@
+{
+    "name": "conquer/services",
+    "description": "Conquer soap services",
+    "keywords": ["yii2", "extension", "wsdl", "services", "soap"],
+    "homepage": "https://github.com/borodulin/yii2-peity",
+    "type": "yii2-extension",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Andrey Borodulin",
+            "email": "borodulin@gmail.com",
+            "homepage": "https://github.com/borodulin/yii2-services"
+        }
+    ],
+    "extra": {
+        "branch-alias": {
+          "dev-master": "1.0.0.x-dev"
+        }
+      },
+    "require": {
+    	"php": ">=5.4.0",
+    	"yiisoft/yii2": "*"
+    },
+	"autoload": {
+		"psr-4": {
+			"conquer\\services\\": ""
+		}
+	}
+}
