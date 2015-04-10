@@ -174,7 +174,7 @@ class WebService extends \yii\base\Component
 		$response->headers->add('Content-Type', 'text/xml');
 		if(YII_DEBUG)
 			ini_set("soap.wsdl_cache_enabled",0);
-		$server=new SoapServer($this->wsdlUrl,$this->getOptions());
+		$server=new \SoapServer($this->wsdlUrl,$this->getOptions());
 	//	\Yii::$app->on($name, $behavior)EventHandler('onError',array($this,'handleError'));
 		try
 		{
