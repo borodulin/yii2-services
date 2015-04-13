@@ -4,7 +4,7 @@
     "keywords": ["yii2", "extension", "wsdl", "services", "soap"],
     "homepage": "https://github.com/borodulin/yii2-services",
     "type": "yii2-extension",
-    "license": "MIT",
+    "license": "BSD-3-Clause",
     "authors": [
         {
             "name": "Andrey Borodulin",
