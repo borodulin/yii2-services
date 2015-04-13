@@ -63,4 +63,4 @@ class MyClass
 
 ## License
 
-**conquer/services** is released under the MIT License. See the bundled `LICENSE.md` for details.
+**conquer/services** is released under the BSD License. See the bundled `LICENSE.md` for details.
