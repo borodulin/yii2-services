@@ -8,13 +8,12 @@
     "authors": [
         {
             "name": "Andrey Borodulin",
-            "email": "borodulin@gmail.com",
-            "homepage": "https://github.com/borodulin/yii2-services"
+            "email": "borodulin@gmail.com"
         }
     ],
     "extra": {
         "branch-alias": {
-          "dev-master": "1.1.1.x-dev"
+          "dev-master": "1.2.1.x-dev"
         }
       },
     "require": {
