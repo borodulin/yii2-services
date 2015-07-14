@@ -5,11 +5,11 @@ Web Service for Yii2 framework
 
 WebService encapsulates SoapServer and provides a WSDL-based web service.
 
-Adaptation of Yii1 Web Services 
+Adaptation of Yii1 Web Services
 
 ## Installation
 
-The preferred way to install this extension is through [composer](http://getcomposer.org/download/). 
+The preferred way to install this extension is through [composer](http://getcomposer.org/download/).
 
 To install, either run
 
@@ -36,7 +36,9 @@ class SiteController extends \yii\web\Controller
         return [
             'soap' => [
                 'class' => 'conquer\services\WebServiceAction',
-                'classMap' = ['MyClass'=>'app\controllers\MyClass'],
+                'classMap' => [
+                    'MyClass' => 'app\controllers\MyClass'
+                ],
             ],
         ];
     }
