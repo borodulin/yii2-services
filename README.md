@@ -47,7 +47,7 @@ class SiteController extends \yii\web\Controller
      */
     public function soapTest($myClass)
     {
-        return get_class($myclass);
+        return get_class($myClass);
     }
 }
 
