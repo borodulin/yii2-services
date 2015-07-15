@@ -151,7 +151,6 @@ class WebService extends \yii\base\Component
         if(is_object($this->provider))
             $providerClass=get_class($this->provider);
         else{
-            \Yii::autoload($this->provider);
             $providerClass=$this->provider;
         }
         if($this->wsdlCacheDuration>0 && $this->cacheID!==false && ($cache=\Yii::$app->get($this->cacheID,false))!==null)
@@ -241,7 +240,7 @@ class WebService extends \yii\base\Component
             // We need to end application explicitly because of
             // http://bugs.php.net/bug.php?id=49513
             \Yii::$app->state = Application::STATE_AFTER_REQUEST;
-            \Yii::$app->trigger(Application::EVENT_AFTER_REQUEST);            
+            \Yii::$app->trigger(Application::EVENT_AFTER_REQUEST);
             $reflect = new \ReflectionClass($e);
             $server->fault($reflect->getShortName(), $message);
             exit(1);
@@ -283,7 +282,6 @@ class WebService extends \yii\base\Component
         $options['encoding']=$this->encoding;
         foreach($this->classMap as $type=>$className)
         {
-            \Yii::autoload($className);
             if(is_int($type))
                 $type=$className;
             $options['classmap'][$type]=$className;
@@ -326,7 +324,7 @@ class SoapObjectWrapper
     {
         return call_user_func_array(array($this->object,$name),$arguments);
     }
-    
+
     /**
      * Returns the fully qualified name of this class.
      * @return string the fully qualified name of this class.
@@ -377,9 +375,9 @@ class DocumentSoapObjectWrapper extends Object
         {
             $result = call_user_func_array(array($this->object, $name), $arguments);
         }
-        return $result === null ? $result : array($name . 'Result' => $result); 
+        return $result === null ? $result : array($name . 'Result' => $result);
     }
-    
+
     /**
      * Returns the fully qualified name of this class.
      * @return string the fully qualified name of this class.
