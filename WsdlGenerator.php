@@ -379,7 +379,6 @@ class WsdlGenerator extends \yii\base\Component
         }
         else
         {    // process class / complex type
-            \Yii::autoload($type);
             $class=new \ReflectionClass($type);
 
             $type=$class->getShortName();
