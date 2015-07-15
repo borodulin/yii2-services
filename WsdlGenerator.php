@@ -883,4 +883,77 @@ th, td{font-size: 12px;font-family: courier;padding: 3px;}
         echo $html;
         \Yii::$app->end(); // end the app to avoid conflict with text/xml header
     }
+
+    /**
+     * @param string $className
+     *
+     * @return string[]
+     */
+    public function getClassMap($className)
+    {
+        $classMap = [];
+        $reflection = new \ReflectionClass($className);
+        foreach ($reflection->getMethods() as $method) {
+            if ($method->isPublic()) {
+                $classMap = $this->getClassMapFromMethod($method, $classMap);
+            }
+        }
+
+        return $classMap;
+    }
+
+    /**
+     * @param \ReflectionMethod $method
+     * @param string[] $classMap
+     *
+     * @return string[]
+     */
+    protected function getClassMapFromMethod(\ReflectionMethod $method, $classMap)
+    {
+        $comment = $method->getDocComment();
+        if (strpos($comment, '@soap') === false) {
+            return $classMap;
+        }
+        $comment = strtr($comment, array("\r\n" => "\n", "\r" => "\n")); // make line endings consistent: win -> unix, mac -> unix
+        $comment = preg_replace('/^\s*\**(\s*?$|\s*)/m', '', $comment);
+        preg_match_all('/^@param\s+([\w\.\\\]+(\[\s*\])?)\s*?(.*)$/im', $comment, $matches);
+        foreach ($matches[1] as $type) {
+            $classMap = $this->getClassMapFromType($type, $classMap);
+        }
+
+        return $classMap;
+    }
+
+    /**
+     * @param string $type
+     * @param string[] $classMap
+     *
+     * @return string[]
+     * @throws \yii\base\UnknownClassException
+     */
+    protected function getClassMapFromType($type, $classMap)
+    {
+        if (isset(self::$typeMap[$type])) {
+            return $classMap;
+        }
+        if (($pos = strpos($type, '[]')) !== false) {
+            $type = substr($type, 0, $pos);
+        }
+        $class = new \ReflectionClass($type);
+        $shortName = $class->getShortName();
+        if (isset($classMap[$shortName])) {
+            return $classMap;
+        }
+        $classMap[$shortName] = $type;
+        foreach ($class->getProperties() as $property) {
+            $comment = $property->getDocComment();
+            if ($property->isPublic() && strpos($comment, '@soap') !== false) {
+                if (preg_match('/@var\s+([\w\.\\\]+(\[\s*\])?)\s*?(.*)$/mi', $comment, $matches)) {
+                    $classMap = $this->getClassMapFromType($matches[1], $classMap);
+                }
+            }
+        }
+
+        return $classMap;
+    }
 }

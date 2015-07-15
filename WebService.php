@@ -7,9 +7,10 @@
 
 namespace conquer\services;
 
-use yii\base\Object;
 use yii\base\Application;
+use yii\base\Object;
 use yii\web\Response;
+
 /**
  * WebService encapsulates SoapServer and provides a WSDL-based web service.
  *
@@ -281,7 +282,7 @@ class WebService extends \yii\base\Component
         if($this->actor!==null)
             $options['actor']=$this->actor;
         $options['encoding']=$this->encoding;
-        foreach($this->classMap as $type=>$className)
+        foreach($this->getClassMap() as $type=>$className)
         {
             \Yii::autoload($className);
             if(is_int($type))
@@ -289,6 +290,24 @@ class WebService extends \yii\base\Component
             $options['classmap'][$type]=$className;
         }
         return $options;
+    }
+
+    /**
+     * @return mixed
+     * @throws \yii\base\InvalidConfigException
+     * @throws \yii\base\UnknownClassException
+     */
+    protected function getClassMap()
+    {
+        if (is_object($this->provider)) {
+            $providerClass = get_class($this->provider);
+        } else {
+            $providerClass = $this->provider;
+        }
+        /** @var WsdlGenerator $generator */
+        $generator = \Yii::createObject($this->generatorConfig);
+
+        return array_merge($generator->getClassMap($providerClass), $this->classMap);
     }
 }
 
