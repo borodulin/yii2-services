@@ -238,7 +238,7 @@ class WsdlGenerator extends \yii\base\Component
         $this->types=array();
         $this->elements=array();
         $this->messages=array();
-        
+
         $reflection=new \ReflectionClass($className);
 
         if($this->serviceName===null)
@@ -246,7 +246,7 @@ class WsdlGenerator extends \yii\base\Component
 
          if($this->namespace===null)
              $this->namespace='urn:'.str_replace('\\','/',$className).'wsdl';
-        
+
         foreach($reflection->getMethods() as $method)
         {
             if($method->isPublic())
@@ -381,7 +381,7 @@ class WsdlGenerator extends \yii\base\Component
         {    // process class / complex type
             \Yii::autoload($type);
             $class=new \ReflectionClass($type);
-            
+
             $type=$class->getShortName();
 
             $comment=$class->getDocComment();
@@ -430,7 +430,7 @@ class WsdlGenerator extends \yii\base\Component
                             $example=trim($match[1]);
 
                         $this->types[$type]['properties'][$property->getName()]=array(
-                            $this->processType(str_replace('\\','/',$matches[1])),
+                            $this->processType($matches[1]),
                             trim($matches[3]),
                             $attributes['nillable'],
                             $attributes['minOccurs'],
@@ -559,7 +559,7 @@ class WsdlGenerator extends \yii\base\Component
                     $attribute=$dom->createElement('xsd:attribute');
                     $attribute->setAttribute('ref','soap-enc:arrayType');
                     $attribute->setAttribute('arrayType',(isset(self::$typeMap[$arrayType]) ? 'xsd:' : 'tns:') .$arrayType.'[]');
-                    
+
                     $restriction->appendChild($attribute);
                     $complexContent->appendChild($restriction);
                     $complexType->appendChild($complexContent);
@@ -579,9 +579,9 @@ class WsdlGenerator extends \yii\base\Component
             elseif(is_array($xmlType))
             {
                 $pathInfo = pathinfo(str_replace('\\', '/', $phpType));
-                
+
                 $complexType->setAttribute('name', $pathInfo['basename']);
-                
+
                 //$complexType->setAttribute('name',$phpType);
                 if($xmlType['custom_wsdl']!==false)
                 {
