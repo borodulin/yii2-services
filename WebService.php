@@ -7,9 +7,10 @@
 
 namespace conquer\services;
 
-use yii\base\Object;
 use yii\base\Application;
+use yii\base\Object;
 use yii\web\Response;
+
 /**
  * WebService encapsulates SoapServer and provides a WSDL-based web service.
  *
@@ -151,7 +152,6 @@ class WebService extends \yii\base\Component
         if(is_object($this->provider))
             $providerClass=get_class($this->provider);
         else{
-            \Yii::autoload($this->provider);
             $providerClass=$this->provider;
         }
         if($this->wsdlCacheDuration>0 && $this->cacheID!==false && ($cache=\Yii::$app->get($this->cacheID,false))!==null)
@@ -241,7 +241,7 @@ class WebService extends \yii\base\Component
             // We need to end application explicitly because of
             // http://bugs.php.net/bug.php?id=49513
             \Yii::$app->state = Application::STATE_AFTER_REQUEST;
-            \Yii::$app->trigger(Application::EVENT_AFTER_REQUEST);            
+            \Yii::$app->trigger(Application::EVENT_AFTER_REQUEST);
             $reflect = new \ReflectionClass($e);
             $server->fault($reflect->getShortName(), $message);
             exit(1);
@@ -281,14 +281,31 @@ class WebService extends \yii\base\Component
         if($this->actor!==null)
             $options['actor']=$this->actor;
         $options['encoding']=$this->encoding;
-        foreach($this->classMap as $type=>$className)
+        foreach($this->getClassMap() as $type=>$className)
         {
-            \Yii::autoload($className);
             if(is_int($type))
                 $type=$className;
             $options['classmap'][$type]=$className;
         }
         return $options;
+    }
+
+    /**
+     * @return mixed
+     * @throws \yii\base\InvalidConfigException
+     * @throws \yii\base\UnknownClassException
+     */
+    protected function getClassMap()
+    {
+        if (is_object($this->provider)) {
+            $providerClass = get_class($this->provider);
+        } else {
+            $providerClass = $this->provider;
+        }
+        /** @var WsdlGenerator $generator */
+        $generator = \Yii::createObject($this->generatorConfig);
+
+        return array_merge($generator->getClassMap($providerClass), $this->classMap);
     }
 }
 
@@ -326,7 +343,7 @@ class SoapObjectWrapper
     {
         return call_user_func_array(array($this->object,$name),$arguments);
     }
-    
+
     /**
      * Returns the fully qualified name of this class.
      * @return string the fully qualified name of this class.
@@ -377,9 +394,9 @@ class DocumentSoapObjectWrapper extends Object
         {
             $result = call_user_func_array(array($this->object, $name), $arguments);
         }
-        return $result === null ? $result : array($name . 'Result' => $result); 
+        return $result === null ? $result : array($name . 'Result' => $result);
     }
-    
+
     /**
      * Returns the fully qualified name of this class.
      * @return string the fully qualified name of this class.

@@ -238,7 +238,7 @@ class WsdlGenerator extends \yii\base\Component
         $this->types=array();
         $this->elements=array();
         $this->messages=array();
-        
+
         $reflection=new \ReflectionClass($className);
 
         if($this->serviceName===null)
@@ -246,7 +246,7 @@ class WsdlGenerator extends \yii\base\Component
 
          if($this->namespace===null)
              $this->namespace='urn:'.str_replace('\\','/',$className).'wsdl';
-        
+
         foreach($reflection->getMethods() as $method)
         {
             if($method->isPublic())
@@ -379,9 +379,8 @@ class WsdlGenerator extends \yii\base\Component
         }
         else
         {    // process class / complex type
-            \Yii::autoload($type);
             $class=new \ReflectionClass($type);
-            
+
             $type=$class->getShortName();
 
             $comment=$class->getDocComment();
@@ -430,7 +429,7 @@ class WsdlGenerator extends \yii\base\Component
                             $example=trim($match[1]);
 
                         $this->types[$type]['properties'][$property->getName()]=array(
-                            $this->processType(str_replace('\\','/',$matches[1])),
+                            $this->processType($matches[1]),
                             trim($matches[3]),
                             $attributes['nillable'],
                             $attributes['minOccurs'],
@@ -559,7 +558,7 @@ class WsdlGenerator extends \yii\base\Component
                     $attribute=$dom->createElement('xsd:attribute');
                     $attribute->setAttribute('ref','soap-enc:arrayType');
                     $attribute->setAttribute('arrayType',(isset(self::$typeMap[$arrayType]) ? 'xsd:' : 'tns:') .$arrayType.'[]');
-                    
+
                     $restriction->appendChild($attribute);
                     $complexContent->appendChild($restriction);
                     $complexType->appendChild($complexContent);
@@ -579,9 +578,9 @@ class WsdlGenerator extends \yii\base\Component
             elseif(is_array($xmlType))
             {
                 $pathInfo = pathinfo(str_replace('\\', '/', $phpType));
-                
+
                 $complexType->setAttribute('name', $pathInfo['basename']);
-                
+
                 //$complexType->setAttribute('name',$phpType);
                 if($xmlType['custom_wsdl']!==false)
                 {
@@ -882,5 +881,78 @@ th, td{font-size: 12px;font-family: courier;padding: 3px;}
 
         echo $html;
         \Yii::$app->end(); // end the app to avoid conflict with text/xml header
+    }
+
+    /**
+     * @param string $className
+     *
+     * @return string[]
+     */
+    public function getClassMap($className)
+    {
+        $classMap = [];
+        $reflection = new \ReflectionClass($className);
+        foreach ($reflection->getMethods() as $method) {
+            if ($method->isPublic()) {
+                $classMap = $this->getClassMapFromMethod($method, $classMap);
+            }
+        }
+
+        return $classMap;
+    }
+
+    /**
+     * @param \ReflectionMethod $method
+     * @param string[] $classMap
+     *
+     * @return string[]
+     */
+    protected function getClassMapFromMethod(\ReflectionMethod $method, $classMap)
+    {
+        $comment = $method->getDocComment();
+        if (strpos($comment, '@soap') === false) {
+            return $classMap;
+        }
+        $comment = strtr($comment, array("\r\n" => "\n", "\r" => "\n")); // make line endings consistent: win -> unix, mac -> unix
+        $comment = preg_replace('/^\s*\**(\s*?$|\s*)/m', '', $comment);
+        preg_match_all('/^@param\s+([\w\.\\\]+(\[\s*\])?)\s*?(.*)$/im', $comment, $matches);
+        foreach ($matches[1] as $type) {
+            $classMap = $this->getClassMapFromType($type, $classMap);
+        }
+
+        return $classMap;
+    }
+
+    /**
+     * @param string $type
+     * @param string[] $classMap
+     *
+     * @return string[]
+     * @throws \yii\base\UnknownClassException
+     */
+    protected function getClassMapFromType($type, $classMap)
+    {
+        if (isset(self::$typeMap[$type])) {
+            return $classMap;
+        }
+        if (($pos = strpos($type, '[]')) !== false) {
+            $type = substr($type, 0, $pos);
+        }
+        $class = new \ReflectionClass($type);
+        $shortName = $class->getShortName();
+        if (isset($classMap[$shortName])) {
+            return $classMap;
+        }
+        $classMap[$shortName] = $type;
+        foreach ($class->getProperties() as $property) {
+            $comment = $property->getDocComment();
+            if ($property->isPublic() && strpos($comment, '@soap') !== false) {
+                if (preg_match('/@var\s+([\w\.\\\]+(\[\s*\])?)\s*?(.*)$/mi', $comment, $matches)) {
+                    $classMap = $this->getClassMapFromType($matches[1], $classMap);
+                }
+            }
+        }
+
+        return $classMap;
     }
 }
