@@ -372,7 +372,7 @@ class WsdlGenerator extends \yii\base\Component
             } else {
                 $shortType = $type;
             }
-            $this->types[$type . '[]'] = 'tns:' . $type . 'Array';
+            $this->types[$type . '[]'] = 'tns:' . $shortType . 'Array';
             $this->processType($type);
             return $this->types[$type . '[]'];
         } else {
