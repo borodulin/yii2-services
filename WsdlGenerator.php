@@ -366,6 +366,12 @@ class WsdlGenerator extends \yii\base\Component
         } elseif (($pos = strpos($type, '[]')) !== false) {
             // array of types
             $type = substr($type, 0, $pos);
+            if (strpos($type, "\\") !== false) {
+                $class=new \ReflectionClass($type);
+                $shortType = $class->getShortName();
+            } else {
+                $shortType = $type;
+            }
             $this->types[$type . '[]'] = 'tns:' . $type . 'Array';
             $this->processType($type);
             return $this->types[$type . '[]'];
