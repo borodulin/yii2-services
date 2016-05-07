@@ -9,6 +9,7 @@ namespace conquer\services;
 
 use yii\base\Action;
 use yii\helpers\Url;
+
 /**
  * WebServiceAction implements an action that provides Web services.
  *
@@ -82,7 +83,7 @@ class WebServiceAction extends \yii\base\Action
     {
         $this->controller->enableCsrfValidation = false;
     }
-    
+
 
     /**
      * Runs the action.

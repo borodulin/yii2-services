@@ -10,6 +10,7 @@ namespace conquer\services;
 use yii\base\Object;
 use yii\base\Application;
 use yii\web\Response;
+
 /**
  * WebService encapsulates SoapServer and provides a WSDL-based web service.
  *
@@ -136,7 +137,7 @@ class WebService extends \yii\base\Component
         $response->charset = $this->encoding;
         $response->format = Response::FORMAT_RAW;
         $response->headers->add('Content-Type', 'text/xml');
-    //    header('Content-Length: '.(function_exists('mb_strlen') ? mb_strlen($wsdl,'8bit') : strlen($wsdl)));
+        //    header('Content-Length: '.(function_exists('mb_strlen') ? mb_strlen($wsdl,'8bit') : strlen($wsdl)));
         return $wsdl;
     }
 
@@ -180,9 +181,8 @@ class WebService extends \yii\base\Component
             ini_set("soap.wsdl_cache_enabled", 0);
         }
         $server = new \SoapServer($this->wsdlUrl, $this->getOptions());
-    //    \Yii::$app->on($name, $behavior)EventHandler('onError',array($this,'handleError'));
-        try
-        {
+        //    \Yii::$app->on($name, $behavior)EventHandler('onError',array($this,'handleError'));
+        try {
             if ($this->persistence !== null) {
                 $server->setPersistence($this->persistence);
             }
@@ -191,32 +191,25 @@ class WebService extends \yii\base\Component
             } else {
                 $provider = $this->provider;
             }
-            if (method_exists($server, 'setObject'))
-            {
-                if (is_array($this->generatorConfig) && isset($this->generatorConfig['bindingStyle']) 
-                        && $this->generatorConfig['bindingStyle'] === 'document')
-                {
+            if (method_exists($server, 'setObject')) {
+                if (is_array($this->generatorConfig) && isset($this->generatorConfig['bindingStyle'])
+                    && $this->generatorConfig['bindingStyle'] === 'document'
+                ) {
                     $server->setObject(new DocumentSoapObjectWrapper($provider));
-                }
-                else
-                {
+                } else {
                     $server->setObject($provider);
                 }
-            }
-            else
-            {
+            } else {
                 if (is_array($this->generatorConfig) && isset($this->generatorConfig['bindingStyle'])
-                    && $this->generatorConfig['bindingStyle'] === 'document')
-                {
+                    && $this->generatorConfig['bindingStyle'] === 'document'
+                ) {
                     $server->setClass(DocumentSoapObjectWrapper::className(), $provider);
-                }
-                else
-                {
+                } else {
                     $server->setClass(SoapObjectWrapper::className(), $provider);
                 }
             }
 
-            if ($provider instanceof IWebServiceProvider){
+            if ($provider instanceof IWebServiceProvider) {
                 if ($provider->beforeWebMethod($this)) {
                     $server->handle();
                     $provider->afterWebMethod($this);
@@ -224,17 +217,15 @@ class WebService extends \yii\base\Component
             } else {
                 $server->handle();
             }
-        }
-        catch (\Exception $e)
-        {
-            if ($e->getCode()!==self::SOAP_ERROR) // non-PHP error
+        } catch (\Exception $e) {
+            if ($e->getCode() !== self::SOAP_ERROR) // non-PHP error
             {
                 // only log for non-PHP-error case because application's error handler already logs it
                 // php <5.2 doesn't support string conversion auto-magically
                 \Yii::error($e->__toString());
             }
 
-            $message=$e->getMessage();
+            $message = $e->getMessage();
             if (YII_DEBUG) {
                 $message .= ' (' . $e->getFile() . ':' . $e->getLine() . ")\n" . $e->getTraceAsString();
             }
@@ -324,7 +315,7 @@ class SoapObjectWrapper
      * @param array $arguments method arguments
      * @return mixed method return value
      */
-    public function __call($name,$arguments)
+    public function __call($name, $arguments)
     {
         return call_user_func_array([$this->object, $name], $arguments);
     }
