@@ -506,14 +506,17 @@ class WsdlGenerator extends Component
      */
     protected function buildDOM($serviceUrl, $encoding)
     {
-        $xml = "<?xml version=\"1.0\" encoding=\"$encoding\"?>
-<definitions name=\"{$this->serviceName}\" targetNamespace=\"{$this->namespace}\"
-     xmlns=\"http://schemas.xmlsoap.org/wsdl/\"
-     xmlns:tns=\"{$this->namespace}\"
-     xmlns:soap=\"http://schemas.xmlsoap.org/wsdl/soap/\"
-     xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\"
-     xmlns:wsdl=\"http://schemas.xmlsoap.org/wsdl/\"
-     xmlns:soap-enc=\"http://schemas.xmlsoap.org/soap/encoding/\"></definitions>";
+        $xml = <<<XML
+<?xml version="1.0" encoding="$encoding"?>
+<definitions name="{$this->serviceName}" targetNamespace="{$this->namespace}"
+    xmlns="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:tns="{$this->namespace}"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:soap-enc="http://schemas.xmlsoap.org/soap/encoding/">
+</definitions>
+XML;
 
         $dom = new \DOMDocument();
         $dom->formatOutput = true;
@@ -848,16 +851,18 @@ th, td{font-size: 12px;font-family: courier;padding: 3px;}
                 $c = 0;
                 foreach ($params as $param => $prop) {
                     ++$c;
-                    $html .= '\n<tr>'
-                        . '\n\t<td>{$c}</td>'
-                        . '\n\t<td>{$param}</td>'
-                        . '\n\t<td>' . (str_replace('xsd:', '', $prop[0])) . '</td>'
-                        . '\n\t<td>' . $prop[2] . "</td>"
-                        . '\n\t<td>' . ($prop[3] == null ? '&nbsp;' : $prop[3]) . '</td>'
-                        . '\n\t<td>' . ($prop[4] == null ? '&nbsp;' : $prop[4]) . '</td>'
-                        . '\n\t<td>{$prop[1]}</td>'
-                        . '\n\t<td>' . (trim($prop[5]) == '' ? '&nbsp;' : $prop[5]) . '</td>'
-                        . '\n</tr>';
+                    $html .= <<<HTML
+<tr>
+    <td>{$c}</td>
+    <td>{$param}</td>
+    <td>{(str_replace('xsd:', '', $prop[0]))}</td>
+    <td>{$prop[2]}</td>
+    <td>{($prop[3] == null ? '&nbsp;' : $prop[3])}</td>
+    <td>{($prop[4] == null ? '&nbsp;' : $prop[4])}</td>
+    <td>{$prop[1]}</td>
+    <td>{(trim($prop[5]) == '' ? '&nbsp;' : $prop[5])}</td>
+</tr>
+HTML;
                 }
                 $html .= '\n</table><br/>';
             }
