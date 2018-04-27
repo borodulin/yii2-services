@@ -1,14 +1,16 @@
 <?php
 /**
  * @link https://github.com/borodulin/yii2-services
- * @copyright Copyright (c) 2015 Andrey Borodulin
  * @license https://github.com/borodulin/yii2-services/blob/master/LICENSE.md
  */
 
 namespace conquer\services;
 
-use yii\base\Object;
+use Yii;
 use yii\base\Application;
+use yii\base\Component;
+use yii\base\Event;
+use yii\base\Object;
 use yii\web\Response;
 
 /**
@@ -30,7 +32,7 @@ use yii\web\Response;
  * @package system.web.services
  * @since 1.0
  */
-class WebService extends \yii\base\Component
+class WebService extends Component
 {
     const SOAP_ERROR = 1001;
     /**
@@ -100,18 +102,21 @@ class WebService extends \yii\base\Component
      * @param mixed $provider the web service provider class name or object
      * @param string $wsdlUrl the URL for WSDL. This is required by {@link run()}.
      * @param string $serviceUrl the URL for the Web service. This is required by {@link generateWsdl()} and {@link renderWsdl()}.
+     * @param array $config
      */
-    public function __construct($provider, $wsdlUrl, $serviceUrl)
+    public function __construct($provider, $wsdlUrl, $serviceUrl, $config = [])
     {
         $this->provider = $provider;
         $this->wsdlUrl = $wsdlUrl;
         $this->serviceUrl = $serviceUrl;
         $this->generatorConfig = WsdlGenerator::className();
+        parent::__construct($config);
     }
 
     /**
      * The PHP error handler.
-     * @param CErrorEvent $event the PHP error event
+     * @param Event $event the PHP error event
+     * @throws \Exception
      */
     public function handleError($event)
     {
@@ -129,11 +134,12 @@ class WebService extends \yii\base\Component
     /**
      * Generates and displays the WSDL as defined by the provider.
      * @see generateWsdl
+     * @throws \yii\base\InvalidConfigException
      */
     public function renderWsdl()
     {
         $wsdl = $this->generateWsdl();
-        $response = \Yii::$app->response;
+        $response = Yii::$app->response;
         $response->charset = $this->encoding;
         $response->format = Response::FORMAT_RAW;
         $response->headers->add('Content-Type', 'text/xml');
@@ -145,6 +151,7 @@ class WebService extends \yii\base\Component
      * Generates the WSDL as defined by the provider.
      * The cached version may be used if the WSDL is found valid in cache.
      * @return string the generated WSDL
+     * @throws \yii\base\InvalidConfigException
      * @see wsdlCacheDuration
      */
     public function generateWsdl()
@@ -154,15 +161,15 @@ class WebService extends \yii\base\Component
         } else {
             $providerClass = $this->provider;
         }
-        if ($this->wsdlCacheDuration > 0 && $this->cacheID !== false && ($cache = \Yii::$app->get($this->cacheID, false)) !== null) {
+        if ($this->wsdlCacheDuration > 0 && $this->cacheID !== false && ($cache = Yii::$app->get($this->cacheID, false)) !== null) {
             $key = 'Yii.WebService.' . $providerClass . $this->serviceUrl . $this->encoding;
             if (($wsdl = $cache->get($key)) !== false) {
                 return $wsdl;
             }
         }
-        $generator = \Yii::createObject($this->generatorConfig);
+        $generator = Yii::createObject($this->generatorConfig);
         $wsdl = $generator->generateWsdl($providerClass, $this->serviceUrl, $this->encoding);
-        if (isset($key)) {
+        if (isset($key, $cache)) {
             $cache->set($key, $wsdl, $this->wsdlCacheDuration);
         }
         return $wsdl;
@@ -170,10 +177,11 @@ class WebService extends \yii\base\Component
 
     /**
      * Handles the web service request.
+     * @throws \ReflectionException
      */
     public function run()
     {
-        $response = \Yii::$app->response;
+        $response = Yii::$app->response;
         $response->format = Response::FORMAT_RAW;
         $response->charset = $this->encoding;
         $response->headers->add('Content-Type', 'text/xml');
@@ -187,7 +195,7 @@ class WebService extends \yii\base\Component
                 $server->setPersistence($this->persistence);
             }
             if (is_string($this->provider)) {
-                $provider = \Yii::createObject($this->provider);
+                $provider = Yii::createObject($this->provider);
             } else {
                 $provider = $this->provider;
             }
@@ -222,7 +230,7 @@ class WebService extends \yii\base\Component
             {
                 // only log for non-PHP-error case because application's error handler already logs it
                 // php <5.2 doesn't support string conversion auto-magically
-                \Yii::error($e->__toString());
+                Yii::error($e->__toString());
             }
 
             $message = $e->getMessage();
@@ -231,8 +239,8 @@ class WebService extends \yii\base\Component
             }
             // We need to end application explicitly because of
             // http://bugs.php.net/bug.php?id=49513
-            \Yii::$app->state = Application::STATE_AFTER_REQUEST;
-            \Yii::$app->trigger(Application::EVENT_AFTER_REQUEST);
+            Yii::$app->state = Application::STATE_AFTER_REQUEST;
+            Yii::$app->trigger(Application::EVENT_AFTER_REQUEST);
             $reflect = new \ReflectionClass($e);
             $server->fault($reflect->getShortName(), $message);
             exit(1);
@@ -337,7 +345,7 @@ class SoapObjectWrapper
  * @author Jan Was <jwas@nets.com.pl>
  * @package system.web.services
  */
-class DocumentSoapObjectWrapper extends Object
+class DocumentSoapObjectWrapper extends Component
 {
     /**
      * @var object the service provider
@@ -347,10 +355,12 @@ class DocumentSoapObjectWrapper extends Object
     /**
      * Constructor.
      * @param object $object the service provider
+     * @param array $config
      */
-    public function __construct($object)
+    public function __construct($object, $config = [])
     {
         $this->object = $object;
+        parent::__construct($config);
     }
 
     /**

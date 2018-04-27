@@ -1,11 +1,13 @@
 <?php
 /**
  * @link https://github.com/borodulin/yii2-services
- * @copyright Copyright (c) 2015 Andrey Borodulin
  * @license https://github.com/borodulin/yii2-services/blob/master/LICENSE.md
  */
 
 namespace conquer\services;
+
+use Yii;
+use yii\base\Component;
 
 /**
  * WsdlGenerator generates the WSDL for a given service class.
@@ -150,7 +152,7 @@ namespace conquer\services;
  * @package system.web.services
  * @since 1.0
  */
-class WsdlGenerator extends \yii\base\Component
+class WsdlGenerator extends Component
 {
     const STYLE_RPC = 'rpc';
     const STYLE_DOCUMENT = 'document';
@@ -231,6 +233,8 @@ class WsdlGenerator extends \yii\base\Component
      * @param string $serviceUrl Web service URL
      * @param string $encoding encoding of the WSDL. Defaults to 'UTF-8'.
      * @return string the generated WSDL
+     * @throws \ReflectionException
+     * @throws \yii\base\ExitException
      */
     public function generateWsdl($className, $serviceUrl, $encoding = 'UTF-8')
     {
@@ -262,7 +266,8 @@ class WsdlGenerator extends \yii\base\Component
     }
 
     /**
-     * @param ReflectionMethod $method method
+     * @param \ReflectionMethod $method method
+     * @throws \ReflectionException
      */
     protected function processMethod($method)
     {
@@ -355,6 +360,8 @@ class WsdlGenerator extends \yii\base\Component
 
     /**
      * @param string $type PHP variable type
+     * @return mixed|string
+     * @throws \ReflectionException
      */
     protected function processType($type)
     {
@@ -439,6 +446,7 @@ class WsdlGenerator extends \yii\base\Component
     /**
      * Parse attributes nillable, minOccurs, maxOccurs
      * @param string $comment Extracted PHPDoc comment
+     * @return array
      */
     protected function getWsdlElementAttributes($comment)
     {
@@ -471,11 +479,11 @@ class WsdlGenerator extends \yii\base\Component
 
     /**
      * Import custom XML source node into WSDL document under specified target node
-     * @param DOMDocument $dom XML WSDL document being generated
-     * @param DOMElement $target XML node, to which will be appended $source node
-     * @param DOMNode $source Source XML node to be imported
+     * @param \DOMDocument $dom XML WSDL document being generated
+     * @param \DOMElement $target XML node, to which will be appended $source node
+     * @param \DOMNode $source Source XML node to be imported
      */
-    protected function injectDom(\DOMDocument $dom, DOMElement $target, DOMNode $source)
+    protected function injectDom(\DOMDocument $dom, \DOMElement $target, \DOMNode $source)
     {
         if ($source->nodeType != XML_ELEMENT_NODE) {
             return;
@@ -494,6 +502,7 @@ class WsdlGenerator extends \yii\base\Component
     /**
      * @param string $serviceUrl Web service URL
      * @param string $encoding encoding of the WSDL. Defaults to 'UTF-8'.
+     * @return \DOMDocument
      */
     protected function buildDOM($serviceUrl, $encoding)
     {
@@ -520,7 +529,7 @@ class WsdlGenerator extends \yii\base\Component
     }
 
     /**
-     * @param DOMDocument $dom Represents an entire HTML or XML document; serves as the root of the document tree
+     * @param \DOMDocument $dom Represents an entire HTML or XML document; serves as the root of the document tree
      */
     protected function addTypes($dom)
     {
@@ -633,7 +642,7 @@ class WsdlGenerator extends \yii\base\Component
     }
 
     /**
-     * @param DOMDocument $dom Represents an entire HTML or XML document; serves as the root of the document tree
+     * @param \DOMDocument $dom Represents an entire HTML or XML document; serves as the root of the document tree
      */
     protected function addMessages($dom)
     {
@@ -658,7 +667,7 @@ class WsdlGenerator extends \yii\base\Component
     }
 
     /**
-     * @param DOMDocument $dom Represents an entire HTML or XML document; serves as the root of the document tree
+     * @param \DOMDocument $dom Represents an entire HTML or XML document; serves as the root of the document tree
      */
     protected function addPortTypes($dom)
     {
@@ -671,9 +680,10 @@ class WsdlGenerator extends \yii\base\Component
     }
 
     /**
-     * @param DOMDocument $dom Represents an entire HTML or XML document; serves as the root of the document tree
+     * @param \DOMDocument $dom Represents an entire HTML or XML document; serves as the root of the document tree
      * @param string $name method name
      * @param string $doc doc
+     * @return \DOMElement
      */
     protected function createPortElement($dom, $name, $doc)
     {
@@ -693,7 +703,7 @@ class WsdlGenerator extends \yii\base\Component
     }
 
     /**
-     * @param DOMDocument $dom Represents an entire HTML or XML document; serves as the root of the document tree
+     * @param \DOMDocument $dom Represents an entire HTML or XML document; serves as the root of the document tree
      */
     protected function addBindings($dom)
     {
@@ -714,7 +724,7 @@ class WsdlGenerator extends \yii\base\Component
     }
 
     /**
-     * @param DOMDocument $dom Represents an entire HTML or XML document; serves as the root of the document tree
+     * @param \DOMDocument $dom Represents an entire HTML or XML document; serves as the root of the document tree
      * @param string $name method name
      * @param array $headers array like array('input'=>array(MESSAGE,PART),'output=>array(MESSAGE,PART))
      */
@@ -770,7 +780,7 @@ class WsdlGenerator extends \yii\base\Component
     }
 
     /**
-     * @param DOMDocument $dom Represents an entire HTML or XML document; serves as the root of the document tree
+     * @param \DOMDocument $dom Represents an entire HTML or XML document; serves as the root of the document tree
      * @param string $serviceUrl Web service URL
      */
     protected function addService($dom, $serviceUrl)
@@ -806,6 +816,8 @@ class WsdlGenerator extends \yii\base\Component
      * </ul>
      *
      * @param bool $return If true, generated HTML output will be returned rather than directly sent to output buffer
+     * @return string
+     * @throws \yii\base\ExitException
      */
     public function buildHtmlDocs($return = false)
     {
@@ -857,6 +869,6 @@ th, td{font-size: 12px;font-family: courier;padding: 3px;}
             return $html;
         }
         echo $html;
-        \Yii::$app->end(); // end the app to avoid conflict with text/xml header
+        Yii::$app->end(); // end the app to avoid conflict with text/xml header
     }
 }

@@ -1,12 +1,12 @@
 <?php
 /**
  * @link https://github.com/borodulin/yii2-services
- * @copyright Copyright (c) 2015 Andrey Borodulin
  * @license https://github.com/borodulin/yii2-services/blob/master/LICENSE.md
  */
 
 namespace conquer\services;
 
+use Yii;
 use yii\base\Action;
 use yii\helpers\Url;
 
@@ -31,7 +31,7 @@ use yii\helpers\Url;
  * @package system.web.services
  * @since 1.0
  */
-class WebServiceAction extends \yii\base\Action
+class WebServiceAction extends Action
 {
     /**
      * @var mixed the Web service provider object or class name.
@@ -89,10 +89,12 @@ class WebServiceAction extends \yii\base\Action
      * Runs the action.
      * If the GET parameter {@link serviceVar} exists, the action handle the remote method invocation.
      * If not, the action will serve WSDL content;
+     * @throws \ReflectionException
+     * @throws \yii\base\InvalidConfigException
      */
     public function run()
     {
-        $hostInfo = \Yii::$app->getRequest()->getHostInfo();
+        $hostInfo = Yii::$app->getRequest()->getHostInfo();
         $controller = $this->controller;
         if (($serviceUrl = $this->serviceUrl) === null) {
             $serviceUrl = $hostInfo . Url::toRoute([$this->getUniqueId(), $this->serviceVar => 1]);
