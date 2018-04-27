@@ -20,7 +20,16 @@
     	"php": ">=5.4.0",
     	"yiisoft/yii2": ">=2.0.5"
     },
-	"autoload": {
+  "require-dev": {
+    "yiisoft/yii2-coding-standards": "~2.0.3",
+    "yiisoft/yii2-debug": "~2.0.0",
+    "yiisoft/yii2-gii": "~2.0.0",
+    "yiisoft/yii2-faker": "~2.0.0",
+    "codeception/base": "^2.2.3",
+    "codeception/verify": "~0.3.1",
+    "guzzlehttp/guzzle": ">=4.1.4 <7.0"
+  },
+  "autoload": {
 		"psr-4": {
 			"conquer\\services\\": ""
 		}

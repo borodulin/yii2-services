@@ -10,7 +10,6 @@ use Yii;
 use yii\base\Application;
 use yii\base\Component;
 use yii\base\Event;
-use yii\base\Object;
 use yii\web\Response;
 
 /**
@@ -186,7 +185,7 @@ class WebService extends Component
         $response->charset = $this->encoding;
         $response->headers->add('Content-Type', 'text/xml');
         if (YII_DEBUG) {
-            ini_set("soap.wsdl_cache_enabled", 0);
+            ini_set('soap.wsdl_cache_enabled', 0);
         }
         $server = new \SoapServer($this->wsdlUrl, $this->getOptions());
         //    \Yii::$app->on($name, $behavior)EventHandler('onError',array($this,'handleError'));
@@ -226,8 +225,8 @@ class WebService extends Component
                 $server->handle();
             }
         } catch (\Exception $e) {
-            if ($e->getCode() !== self::SOAP_ERROR) // non-PHP error
-            {
+            // non-PHP error
+            if ($e->getCode() !== self::SOAP_ERROR) {
                 // only log for non-PHP-error case because application's error handler already logs it
                 // php <5.2 doesn't support string conversion auto-magically
                 Yii::error($e->__toString());
@@ -273,7 +272,7 @@ class WebService extends Component
      */
     protected function getOptions()
     {
-        $options = array();
+        $options = [];
         if ($this->soapVersion === '1.1') {
             $options['soap_version'] = SOAP_1_1;
         } elseif ($this->soapVersion === '1.2') {
@@ -292,101 +291,3 @@ class WebService extends Component
         return $options;
     }
 }
-
-
-/**
- * SoapObjectWrapper is a wrapper class internally used when SoapServer::setObject() is not defined.
- *
- * @author Qiang Xue <qiang.xue@gmail.com>
- * @package system.web.services
- */
-class SoapObjectWrapper
-{
-    /**
-     * @var object the service provider
-     */
-    public $object = null;
-
-    /**
-     * Constructor.
-     * @param object $object the service provider
-     */
-    public function __construct($object)
-    {
-        $this->object = $object;
-    }
-
-    /**
-     * PHP __call magic method.
-     * This method calls the service provider to execute the actual logic.
-     * @param string $name method name
-     * @param array $arguments method arguments
-     * @return mixed method return value
-     */
-    public function __call($name, $arguments)
-    {
-        return call_user_func_array([$this->object, $name], $arguments);
-    }
-
-    /**
-     * Returns the fully qualified name of this class.
-     * @return string the fully qualified name of this class.
-     */
-    public static function className()
-    {
-        return get_called_class();
-    }
-}
-
-/**
- * DocumentSoapObjectWrapper is a wrapper class internally used
- * when generatorConfig contains bindingStyle key set to document value.
- *
- * @author Jan Was <jwas@nets.com.pl>
- * @package system.web.services
- */
-class DocumentSoapObjectWrapper extends Component
-{
-    /**
-     * @var object the service provider
-     */
-    public $object = null;
-
-    /**
-     * Constructor.
-     * @param object $object the service provider
-     * @param array $config
-     */
-    public function __construct($object, $config = [])
-    {
-        $this->object = $object;
-        parent::__construct($config);
-    }
-
-    /**
-     * PHP __call magic method.
-     * This method calls the service provider to execute the actual logic.
-     * @param string $name method name
-     * @param array $arguments method arguments
-     * @return mixed method return value
-     */
-    public function __call($name, $arguments)
-    {
-        if (is_array($arguments) && isset($arguments[0])) {
-            $result = call_user_func_array(array($this->object, $name), (array)$arguments[0]);
-        } else {
-            $result = call_user_func_array(array($this->object, $name), $arguments);
-        }
-        return $result === null ? $result : array($name . 'Result' => $result);
-    }
-
-    /**
-     * Returns the fully qualified name of this class.
-     * @return string the fully qualified name of this class.
-     */
-    public static function className()
-    {
-        return get_called_class();
-    }
-}
-

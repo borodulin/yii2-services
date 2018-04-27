@@ -372,7 +372,7 @@ class WsdlGenerator extends Component
         } elseif (($pos = strpos($type, '[]')) !== false) {
             // array of types
             $type = substr($type, 0, $pos);
-            if (strpos($type, "\\") !== false) {
+            if (strpos($type, '\\') !== false) {
                 $class = new \ReflectionClass($type);
                 $shortType = $class->getShortName();
             } else {
@@ -425,7 +425,7 @@ class WsdlGenerator extends Component
                         }
                         // extract PHPDoc @example
                         $example = '';
-                        if (preg_match("/@example[:]?(.+)/mi", $comment, $match)) {
+                        if (preg_match('/@example[:]?(.+)/mi', $comment, $match)) {
                             $example = trim($match[1]);
                         }
                         $this->types[$type]['properties'][$property->getName()] = [
@@ -727,6 +727,7 @@ class WsdlGenerator extends Component
      * @param \DOMDocument $dom Represents an entire HTML or XML document; serves as the root of the document tree
      * @param string $name method name
      * @param array $headers array like array('input'=>array(MESSAGE,PART),'output=>array(MESSAGE,PART))
+     * @return \DOMElement
      */
     protected function createOperationElement($dom, $name, $headers = null)
     {
@@ -847,18 +848,18 @@ th, td{font-size: 12px;font-family: courier;padding: 3px;}
                 $c = 0;
                 foreach ($params as $param => $prop) {
                     ++$c;
-                    $html .= "\n<tr>"
-                        . "\n\t<td>{$c}</td>"
-                        . "\n\t<td>{$param}</td>"
-                        . "\n\t<td>" . (str_replace('xsd:', '', $prop[0])) . "</td>"
-                        . "\n\t<td>" . $prop[2] . "</td>"
-                        . "\n\t<td>" . ($prop[3] == null ? '&nbsp;' : $prop[3]) . "</td>"
-                        . "\n\t<td>" . ($prop[4] == null ? '&nbsp;' : $prop[4]) . "</td>"
-                        . "\n\t<td>{$prop[1]}</td>"
-                        . "\n\t<td>" . (trim($prop[5]) == '' ? '&nbsp;' : $prop[5]) . "</td>"
-                        . "\n</tr>";
+                    $html .= '\n<tr>'
+                        . '\n\t<td>{$c}</td>'
+                        . '\n\t<td>{$param}</td>'
+                        . '\n\t<td>' . (str_replace('xsd:', '', $prop[0])) . '</td>'
+                        . '\n\t<td>' . $prop[2] . "</td>"
+                        . '\n\t<td>' . ($prop[3] == null ? '&nbsp;' : $prop[3]) . '</td>'
+                        . '\n\t<td>' . ($prop[4] == null ? '&nbsp;' : $prop[4]) . '</td>'
+                        . '\n\t<td>{$prop[1]}</td>'
+                        . '\n\t<td>' . (trim($prop[5]) == '' ? '&nbsp;' : $prop[5]) . '</td>'
+                        . '\n</tr>';
                 }
-                $html .= "\n</table><br/>";
+                $html .= '\n</table><br/>';
             }
         } else {
             $html .= 'No complex data type found!';
