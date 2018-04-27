@@ -6,10 +6,19 @@
 
 actor: AcceptanceTester
 modules:
-    enabled:
-        - \Helper\Acceptance
-        - Yii2
-        - Asserts
-    config:
-        Yii2:
-            configFile: 'tests/app/config/test-config.php'
+  enabled:
+#    - PhpBrowser:
+#        url: http://localhost/
+    - \Helper\Acceptance
+#    - SOAP:
+#        depends: PhpBrowser
+#        endpoint: http://localhost/api/soap/
+#    - Yii2
+    - Asserts
+    - REST:
+        url: /
+        depends: Yii2
+        part: Json
+  config:
+    Yii2:
+      configFile: 'tests/app/config/test-config.php'

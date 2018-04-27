@@ -13,8 +13,10 @@ use yii\web\Controller;
  * Class SoapController
  * @package conquer\services\tests\app\controllers
  */
-class SoapController extends Controller
+class ApiController extends Controller
 {
+    public $enableCsrfValidation = false;
+
     public function actions()
     {
         return [
@@ -27,12 +29,17 @@ class SoapController extends Controller
         ];
     }
     /**
-     * @param SoapModel $myClass
+     * @param conquer\services\tests\app\models\SoapModel $myClass
      * @return string
      * @soap
      */
     public function soapTest($myClass)
     {
         return get_class($myClass);
+    }
+
+    public function actionIndex()
+    {
+        return 'ok';
     }
 }

@@ -14,5 +14,7 @@ class SoapCest
     // tests
     public function tryToTest(AcceptanceTester $I)
     {
+        $I->sendGET('api/soap');
+        $I->canSeeResponseJsonMatchesXpath('/');
     }
 }
