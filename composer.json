@@ -1,25 +1,25 @@
 {
-    "name": "conquer/services",
-    "description": "Yii2 soap wsdl web services",
-    "keywords": ["yii2", "extension", "wsdl", "services", "soap"],
-    "homepage": "https://github.com/borodulin/yii2-services",
-    "type": "yii2-extension",
-    "license": "BSD-3-Clause",
-    "authors": [
-        {
-            "name": "Andrey Borodulin",
-            "email": "borodulin@gmail.com"
-        }
-    ],
-    "extra": {
-        "branch-alias": {
-          "dev-master": "1.3.2.x-dev"
-        }
-      },
-    "require": {
-    	"php": ">=5.4.0",
-    	"yiisoft/yii2": ">=2.0.5"
-    },
+  "name": "conquer/services",
+  "description": "Yii2 soap wsdl web services",
+  "keywords": ["yii2", "extension", "wsdl", "services", "soap"],
+  "homepage": "https://github.com/borodulin/yii2-services",
+  "type": "yii2-extension",
+  "license": "BSD-3-Clause",
+  "authors": [
+    {
+      "name": "Andrey Borodulin",
+      "email": "borodulin@gmail.com"
+    }
+  ],
+  "extra": {
+    "branch-alias": {
+      "dev-master": "1.3.2.x-dev"
+    }
+  },
+  "require": {
+    "php": ">=5.4.0",
+    "yiisoft/yii2": ">=2.0.5"
+  },
   "require-dev": {
     "yiisoft/yii2-coding-standards": "~2.0.3",
     "yiisoft/yii2-debug": "~2.0.0",
@@ -30,8 +30,14 @@
     "guzzlehttp/guzzle": ">=4.1.4 <7.0"
   },
   "autoload": {
-		"psr-4": {
-			"conquer\\services\\": ""
-		}
-	}
+    "psr-4": {
+      "conquer\\services\\": ""
+    }
+  },
+  "repositories": [
+    {
+      "type": "composer",
+      "url": "https://asset-packagist.org"
+    }
+  ]
 }
