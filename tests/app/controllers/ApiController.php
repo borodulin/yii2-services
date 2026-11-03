@@ -38,6 +38,17 @@ class ApiController extends Controller
         return get_class($myClass);
     }
 
+    /**
+     * @param int $a
+     * @param int $b
+     * @return int
+     * @soap
+     */
+    public function add($a, $b)
+    {
+        return $a + $b;
+    }
+
     public function actionIndex()
     {
         return 'ok';

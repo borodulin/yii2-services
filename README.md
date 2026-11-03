@@ -63,6 +63,15 @@ class MyClass
 }
 ```
 
+## Security notes
+
+- Since 1.6.0 `SoapServer` loads the WSDL from a file generated into `@runtime/wsdl` (`WebService::$useLocalWsdl`).
+  Earlier versions fetched it over HTTP from a URL built from the request `Host` header, which allowed
+  server-side request forgery.
+- The WSDL served to clients contains the service URL, built from the request host when
+  `WebServiceAction::$serviceUrl` is not set. Configure `serviceUrl`/`wsdlUrl` explicitly or set
+  `Request::$hostInfo` (or `trustedHosts`) in production.
+
 ## License
 
 **conquer/services** is released under the BSD License. See the bundled [`LICENSE.md`](LICENSE.md) for details.

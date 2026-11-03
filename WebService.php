@@ -7,6 +7,7 @@
 namespace conquer\services;
 
 use Yii;
+use yii\helpers\FileHelper;
 use yii\base\Application;
 use yii\base\Component;
 use yii\base\Event;
@@ -93,6 +94,18 @@ class WebService extends Component
      */
     public $generatorConfig;
 
+    /**
+     * @var bool whether SoapServer should load the WSDL from a locally generated file.
+     * When false, the WSDL is fetched over HTTP from {@link $wsdlUrl}, which is built from the request
+     * Host header by default and therefore lets clients make the server fetch arbitrary URLs (SSRF).
+     */
+    public $useLocalWsdl = true;
+
+    /**
+     * @var string directory (path alias allowed) where generated WSDL files for SoapServer are stored.
+     */
+    public $wsdlPath = '@runtime/wsdl';
+
     private $_method;
 
 
@@ -178,6 +191,29 @@ class WebService extends Component
      * Handles the web service request.
      * @throws \ReflectionException
      */
+    /**
+     * Generates the WSDL into a local file used by SoapServer.
+     * The service location inside this file is irrelevant for SoapServer, so a fixed one is used:
+     * the file does not depend on request headers and only one file per service is created.
+     * @return string path to the WSDL file
+     * @throws \yii\base\Exception
+     */
+    public function getLocalWsdlFile()
+    {
+        $providerClass = is_object($this->provider) ? get_class($this->provider) : $this->provider;
+        $generator = Yii::createObject($this->generatorConfig);
+        $wsdl = $generator->generateWsdl($providerClass, 'http://localhost/', $this->encoding);
+        $dir = Yii::getAlias($this->wsdlPath);
+        FileHelper::createDirectory($dir);
+        $file = $dir . DIRECTORY_SEPARATOR . md5($wsdl) . '.wsdl';
+        if (!is_file($file)) {
+            $tmp = $file . '.' . uniqid('', true);
+            file_put_contents($tmp, $wsdl);
+            rename($tmp, $file);
+        }
+        return $file;
+    }
+
     public function run()
     {
         $response = Yii::$app->response;
@@ -187,7 +223,7 @@ class WebService extends Component
         if (YII_DEBUG) {
             ini_set('soap.wsdl_cache_enabled', 0);
         }
-        $server = new \SoapServer($this->wsdlUrl, $this->getOptions());
+        $server = new \SoapServer($this->useLocalWsdl ? $this->getLocalWsdlFile() : $this->wsdlUrl, $this->getOptions());
         //    \Yii::$app->on($name, $behavior)EventHandler('onError',array($this,'handleError'));
         try {
             if ($this->persistence !== null) {
@@ -252,11 +288,7 @@ class WebService extends Component
     public function getMethodName()
     {
         if ($this->_method === null) {
-            if (isset($HTTP_RAW_POST_DATA)) {
-                $request = $HTTP_RAW_POST_DATA;
-            } else {
-                $request = file_get_contents('php://input');
-            }
+            $request = file_get_contents('php://input');
             if (preg_match('/<.*?:Body[^>]*>\s*<.*?:(\w+)/mi', $request, $matches)) {
                 $this->_method = $matches[1];
             } else {

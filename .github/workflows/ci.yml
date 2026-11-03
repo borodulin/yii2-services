@@ -18,6 +18,7 @@ jobs:
         with:
           php-version: ${{ matrix.php }}
           coverage: none
+          extensions: soap
       - run: composer update --no-interaction --no-progress
       - run: vendor/bin/phpcs --standard=vendor/yiisoft/yii2-coding-standards/Yii2 --extensions=php --ignore=vendor,tests .
       - run: vendor/bin/codecept run
