@@ -1,6 +1,6 @@
 Web Service for Yii2 framework
 =================
-[![Build Status](https://travis-ci.org/borodulin/yii2-services.svg?branch=master)](https://travis-ci.org/borodulin/yii2-services)
+[![CI](https://github.com/borodulin/yii2-services/actions/workflows/ci.yml/badge.svg)](https://github.com/borodulin/yii2-services/actions/workflows/ci.yml)
 
 ## Description
 

@@ -1,20 +1,13 @@
 <?php
 
-
 class SoapCest
 {
-    public function _before(AcceptanceTester $I)
-    {
-    }
-
-    public function _after(AcceptanceTester $I)
-    {
-    }
-
-    // tests
-    public function tryToTest(AcceptanceTester $I)
+    public function wsdlIsGenerated(AcceptanceTester $I)
     {
         $I->sendGET('api/soap');
-//        $I->canSeeResponseJsonMatchesXpath('/');
+        $I->seeResponseCodeIs(200);
+        $I->seeResponseContains('definitions');
+        $I->seeResponseContains('soapTest');
+        $I->seeResponseContains('SoapModel');
     }
 }
