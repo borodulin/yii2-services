@@ -8,6 +8,8 @@ namespace conquer\services;
 
 use Yii;
 use yii\base\Component;
+use yii\base\InvalidConfigException;
+use yii\helpers\Html;
 
 /**
  * WsdlGenerator generates the WSDL for a given service class.
@@ -145,7 +147,7 @@ use yii\base\Component;
  * </pre>
  * In the example above, WSDL generator would inject under XML node &lt;xsd:User&gt; the code block defined by @soap-wsdl lines.
  *
- * By inserting into SOAP URL link the parameter "?makedoc", WSDL generator will output human-friendly overview of all complex data types rather than XML WSDL file.
+ * With the "makedoc" GET parameter in the WSDL URL (e.g. "http://www.mydomain.com/soap?makedoc"), {@link WebService::renderWsdl()} outputs a human-friendly overview of all complex data types instead of the WSDL.
  * Each complex type is described in a separate HTML table and recognizes also the '@example' PHPDoc tag. See {@link buildHtmlDocs()}.
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
@@ -223,6 +225,11 @@ class WsdlGenerator extends Component
     protected $elements;
 
     /**
+     * @var array complex type name (short class name) => fully qualified class name
+     */
+    protected $classTypes;
+
+    /**
      * @var array Map of request and response types for all operations.
      */
     protected $messages;
@@ -232,14 +239,15 @@ class WsdlGenerator extends Component
      * @param string $className class name
      * @param string $serviceUrl Web service URL
      * @param string $encoding encoding of the WSDL. Defaults to 'UTF-8'.
-     * @return string the generated WSDL
+     * @throws InvalidConfigException when two complex types have the same short class name
      * @throws \ReflectionException
-     * @throws \yii\base\ExitException
+     * @return string the generated WSDL
      */
     public function generateWsdl($className, $serviceUrl, $encoding = 'UTF-8')
     {
         $this->operations = [];
         $this->types = [];
+        $this->classTypes = [];
         $this->elements = [];
         $this->messages = [];
 
@@ -259,9 +267,6 @@ class WsdlGenerator extends Component
 
         $wsdl = $this->buildDOM($serviceUrl, $encoding)->saveXML();
 
-        if (isset($_GET['makedoc'])) {
-            $this->buildHtmlDocs();
-        }
         return $wsdl;
     }
 
@@ -365,6 +370,8 @@ class WsdlGenerator extends Component
      */
     protected function processType($type)
     {
+        // "\app\models\User" and "app\models\User" are the same type
+        $type = ltrim(trim($type), '\\');
         if (isset(self::$typeMap[$type])) {
             return self::$typeMap[$type];
         } elseif (isset($this->types[$type])) {
@@ -386,6 +393,16 @@ class WsdlGenerator extends Component
             $class = new \ReflectionClass($type);
 
             $type = $class->getShortName();
+            $className = $class->getName();
+            if (isset($this->classTypes[$type])) {
+                if ($this->classTypes[$type] !== $className) {
+                    throw new InvalidConfigException("Classes {$this->classTypes[$type]} and {$className} "
+                        . "have the same short name \"{$type}\", which is used as the WSDL type name.");
+                }
+                // already processed or being processed: recursive and repeated references
+                return 'tns:' . $type;
+            }
+            $this->classTypes[$type] = $className;
 
             $comment = $class->getDocComment();
             $comment = strtr($comment, ["\r\n" => "\n", "\r" => "\n"]); // make line endings consistent: win -> unix, mac -> unix
@@ -834,7 +851,7 @@ th{background-color: #EEEEEE;}
 th, td{font-size: 12px;font-family: courier;padding: 3px;}
 </style>';
         $html .= '</head><body>';
-        $html .= '<h2>WSDL documentation for service ' . $this->serviceName . '</h2>';
+        $html .= '<h2>WSDL documentation for service ' . Html::encode($this->serviceName) . '</h2>';
         $html .= '<p>Generated on ' . date('d.m.Y H:i:s') . '</p>';
         $html .= '<table border="0" cellspacing="1" cellpadding="1">';
         $html .= '<tr><td>';
@@ -845,26 +862,30 @@ th, td{font-size: 12px;font-family: courier;padding: 3px;}
                     continue;
                 }
                 $params = $options['properties'];
-                $html .= "\n\n<h3>Object: {$object}</h3>";
+                $html .= "\n\n<h3>Object: " . Html::encode($object) . '</h3>';
                 $html .= '<table border="1" cellspacing="1" cellpadding="1">';
                 $html .= '<tr><th>#</th><th>Attribute</th><th>Type</th><th>Nill</th><th>Min</th><th>Max</th><th>Description</th><th>Example</th></tr>';
                 $c = 0;
                 foreach ($params as $param => $prop) {
                     ++$c;
-                    $html .= <<<HTML
-<tr>
-    <td>{$c}</td>
-    <td>{$param}</td>
-    <td>{(str_replace('xsd:', '', $prop[0]))}</td>
-    <td>{$prop[2]}</td>
-    <td>{($prop[3] == null ? '&nbsp;' : $prop[3])}</td>
-    <td>{($prop[4] == null ? '&nbsp;' : $prop[4])}</td>
-    <td>{$prop[1]}</td>
-    <td>{(trim($prop[5]) == '' ? '&nbsp;' : $prop[5])}</td>
-</tr>
-HTML;
+                    $cells = [
+                        $c,
+                        $param,
+                        str_replace('xsd:', '', $prop[0]),
+                        $prop[2],
+                        $prop[3],
+                        $prop[4],
+                        $prop[1],
+                        $prop[5],
+                    ];
+                    $html .= "\n<tr>";
+                    foreach ($cells as $cell) {
+                        $cell = trim((string)$cell);
+                        $html .= '<td>' . ($cell === '' ? '&nbsp;' : Html::encode($cell)) . '</td>';
+                    }
+                    $html .= '</tr>';
                 }
-                $html .= '\n</table><br/>';
+                $html .= "\n</table><br/>";
             }
         } else {
             $html .= 'No complex data type found!';

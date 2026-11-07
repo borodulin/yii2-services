@@ -23,6 +23,11 @@ class DocumentSoapObjectWrapper extends Component
     public $object = null;
 
     /**
+     * @var WebService|null the web service; null calls the provider directly
+     */
+    public $service;
+
+    /**
      * Constructor.
      * @param object $object the service provider
      * @param array $config
@@ -43,7 +48,10 @@ class DocumentSoapObjectWrapper extends Component
     public function __call($name, $arguments)
     {
         if (is_array($arguments) && isset($arguments[0])) {
-            $result = call_user_func_array([$this->object, $name], (array)$arguments[0]);
+            $arguments = (array)$arguments[0];
+        }
+        if ($this->service !== null) {
+            $result = $this->service->invokeProvider([$this->object, $name], $arguments);
         } else {
             $result = call_user_func_array([$this->object, $name], $arguments);
         }

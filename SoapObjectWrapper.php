@@ -7,7 +7,8 @@
 namespace conquer\services;
 
 /**
- * SoapObjectWrapper is a wrapper class internally used when SoapServer::setObject() is not defined.
+ * SoapObjectWrapper is the object passed to SoapServer: it calls the service provider
+ * and converts its exceptions into SOAP faults (see {@link WebService::createFault()}).
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @package system.web.services
@@ -20,12 +21,19 @@ class SoapObjectWrapper
     public $object = null;
 
     /**
+     * @var WebService|null the web service; null calls the provider directly
+     */
+    public $service;
+
+    /**
      * Constructor.
      * @param object $object the service provider
+     * @param WebService|null $service
      */
-    public function __construct($object)
+    public function __construct($object, $service = null)
     {
         $this->object = $object;
+        $this->service = $service;
     }
 
     /**
@@ -37,6 +45,9 @@ class SoapObjectWrapper
      */
     public function __call($name, $arguments)
     {
+        if ($this->service !== null) {
+            return $this->service->invokeProvider([$this->object, $name], $arguments);
+        }
         return call_user_func_array([$this->object, $name], $arguments);
     }
 

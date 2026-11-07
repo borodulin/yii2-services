@@ -113,8 +113,8 @@ class WebServiceAction extends Action
         foreach ($this->serviceOptions as $name => $value) {
             $this->_service->$name = $value;
         }
-        if (isset($_GET[$this->serviceVar])) {
-            $this->_service->run();
+        if (Yii::$app->getRequest()->get($this->serviceVar) !== null) {
+            return $this->_service->run();
         } else {
             return $this->_service->renderWsdl();
         }

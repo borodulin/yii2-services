@@ -11,6 +11,7 @@ use yii\helpers\FileHelper;
 use yii\base\Application;
 use yii\base\Component;
 use yii\base\Event;
+use yii\base\UserException;
 use yii\web\Response;
 
 /**
@@ -106,6 +107,11 @@ class WebService extends Component
      */
     public $wsdlPath = '@runtime/wsdl';
 
+    /**
+     * @var bool whether the WSDL URL with the "makedoc" GET parameter shows HTML documentation of the complex types.
+     */
+    public $enableHtmlDocs = true;
+
     private $_method;
 
 
@@ -150,8 +156,14 @@ class WebService extends Component
      */
     public function renderWsdl()
     {
-        $wsdl = $this->generateWsdl();
         $response = Yii::$app->response;
+        if ($this->enableHtmlDocs && Yii::$app->request->get('makedoc') !== null) {
+            $generator = Yii::createObject($this->generatorConfig);
+            $generator->generateWsdl($this->getProviderClass(), $this->serviceUrl, $this->encoding);
+            $response->format = Response::FORMAT_HTML;
+            return $generator->buildHtmlDocs(true);
+        }
+        $wsdl = $this->generateWsdl();
         $response->charset = $this->encoding;
         $response->format = Response::FORMAT_RAW;
         $response->headers->add('Content-Type', 'text/xml');
@@ -168,19 +180,25 @@ class WebService extends Component
      */
     public function generateWsdl()
     {
-        if (is_object($this->provider)) {
-            $providerClass = get_class($this->provider);
-        } else {
-            $providerClass = $this->provider;
-        }
+        return $this->buildWsdl($this->serviceUrl);
+    }
+
+    /**
+     * @param string $serviceUrl service location written into the WSDL
+     * @return string the WSDL, from cache when {@link wsdlCacheDuration} is set
+     * @throws \yii\base\InvalidConfigException
+     */
+    protected function buildWsdl($serviceUrl)
+    {
+        $providerClass = $this->getProviderClass();
         if ($this->wsdlCacheDuration > 0 && $this->cacheID !== false && ($cache = Yii::$app->get($this->cacheID, false)) !== null) {
-            $key = 'Yii.WebService.' . $providerClass . $this->serviceUrl . $this->encoding;
+            $key = 'Yii.WebService.' . $providerClass . $serviceUrl . $this->encoding;
             if (($wsdl = $cache->get($key)) !== false) {
                 return $wsdl;
             }
         }
         $generator = Yii::createObject($this->generatorConfig);
-        $wsdl = $generator->generateWsdl($providerClass, $this->serviceUrl, $this->encoding);
+        $wsdl = $generator->generateWsdl($providerClass, $serviceUrl, $this->encoding);
         if (isset($key, $cache)) {
             $cache->set($key, $wsdl, $this->wsdlCacheDuration);
         }
@@ -188,9 +206,13 @@ class WebService extends Component
     }
 
     /**
-     * Handles the web service request.
-     * @throws \ReflectionException
+     * @return string class name of the provider
      */
+    protected function getProviderClass()
+    {
+        return is_object($this->provider) ? get_class($this->provider) : $this->provider;
+    }
+
     /**
      * Generates the WSDL into a local file used by SoapServer.
      * The service location inside this file is irrelevant for SoapServer, so a fixed one is used:
@@ -200,9 +222,7 @@ class WebService extends Component
      */
     public function getLocalWsdlFile()
     {
-        $providerClass = is_object($this->provider) ? get_class($this->provider) : $this->provider;
-        $generator = Yii::createObject($this->generatorConfig);
-        $wsdl = $generator->generateWsdl($providerClass, 'http://localhost/', $this->encoding);
+        $wsdl = $this->buildWsdl('http://localhost/');
         $dir = Yii::getAlias($this->wsdlPath);
         FileHelper::createDirectory($dir);
         $file = $dir . DIRECTORY_SEPARATOR . md5($wsdl) . '.wsdl';
@@ -214,44 +234,27 @@ class WebService extends Component
         return $file;
     }
 
+    /**
+     * Handles the web service request.
+     *
+     * The SOAP response written by SoapServer is returned as the application response
+     * (with the status code and content type set by SoapServer).
+     * @return Response
+     */
     public function run()
     {
-        $response = Yii::$app->response;
-        $response->format = Response::FORMAT_RAW;
-        $response->charset = $this->encoding;
-        $response->headers->add('Content-Type', 'text/xml');
         if (YII_DEBUG) {
             ini_set('soap.wsdl_cache_enabled', 0);
         }
-        $server = new \SoapServer($this->useLocalWsdl ? $this->getLocalWsdlFile() : $this->wsdlUrl, $this->getOptions());
-        //    \Yii::$app->on($name, $behavior)EventHandler('onError',array($this,'handleError'));
+        $level = ob_get_level();
+        ob_start();
         try {
+            $server = new \SoapServer($this->useLocalWsdl ? $this->getLocalWsdlFile() : $this->wsdlUrl, $this->getOptions());
             if ($this->persistence !== null) {
                 $server->setPersistence($this->persistence);
             }
-            if (is_string($this->provider)) {
-                $provider = Yii::createObject($this->provider);
-            } else {
-                $provider = $this->provider;
-            }
-            if (method_exists($server, 'setObject')) {
-                if (is_array($this->generatorConfig) && isset($this->generatorConfig['bindingStyle'])
-                    && $this->generatorConfig['bindingStyle'] === 'document'
-                ) {
-                    $server->setObject(new DocumentSoapObjectWrapper($provider));
-                } else {
-                    $server->setObject($provider);
-                }
-            } else {
-                if (is_array($this->generatorConfig) && isset($this->generatorConfig['bindingStyle'])
-                    && $this->generatorConfig['bindingStyle'] === 'document'
-                ) {
-                    $server->setClass(DocumentSoapObjectWrapper::className(), $provider);
-                } else {
-                    $server->setClass(SoapObjectWrapper::className(), $provider);
-                }
-            }
-
+            $provider = is_string($this->provider) ? Yii::createObject($this->provider) : $this->provider;
+            $server->setObject($this->createProviderWrapper($provider));
             if ($provider instanceof IWebServiceProvider) {
                 if ($provider->beforeWebMethod($this)) {
                     $server->handle();
@@ -260,26 +263,135 @@ class WebService extends Component
             } else {
                 $server->handle();
             }
-        } catch (\Exception $e) {
-            // non-PHP error
-            if ($e->getCode() !== self::SOAP_ERROR) {
-                // only log for non-PHP-error case because application's error handler already logs it
-                // php <5.2 doesn't support string conversion auto-magically
-                Yii::error($e->__toString());
+            $statusCode = http_response_code();
+            $contentType = $this->getSentContentType();
+        } catch (\Throwable $e) {
+            // outside the web method: SoapServer setup, beforeWebMethod(), afterWebMethod()
+            while (ob_get_level() > $level + 1) {
+                ob_end_clean();
             }
-
-            $message = $e->getMessage();
-            if (YII_DEBUG) {
-                $message .= ' (' . $e->getFile() . ':' . $e->getLine() . ")\n" . $e->getTraceAsString();
-            }
-            // We need to end application explicitly because of
-            // http://bugs.php.net/bug.php?id=49513
-            Yii::$app->state = Application::STATE_AFTER_REQUEST;
-            Yii::$app->trigger(Application::EVENT_AFTER_REQUEST);
-            $reflect = new \ReflectionClass($e);
-            $server->fault($reflect->getShortName(), $message);
-            exit(1);
+            ob_clean();
+            echo $this->renderFault($this->createFault($e));
+            $statusCode = 500;
+            $contentType = ($this->soapVersion === '1.2' ? 'application/soap+xml' : 'text/xml') . '; charset=' . $this->encoding;
         }
+        while (ob_get_level() > $level + 1) {
+            ob_end_flush();
+        }
+        $content = ob_get_clean();
+        if (!headers_sent()) {
+            header_remove('Content-Type');
+            header_remove('Content-Length');
+        }
+
+        $response = Yii::$app->response;
+        $response->format = Response::FORMAT_RAW;
+        $response->charset = $this->encoding;
+        $response->headers->set('Content-Type', $contentType ?: 'text/xml; charset=' . $this->encoding);
+        if (is_int($statusCode) && $statusCode >= 100) {
+            $response->setStatusCode($statusCode);
+        }
+        $response->content = $content;
+        return $response;
+    }
+
+    /**
+     * Calls a web method of the provider.
+     * Exceptions other than SoapFault are converted by {@link createFault()}.
+     * @param callable $callback
+     * @param array $arguments
+     * @return mixed
+     * @throws \SoapFault
+     */
+    public function invokeProvider($callback, $arguments)
+    {
+        try {
+            return call_user_func_array($callback, $arguments);
+        } catch (\SoapFault $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            throw $this->createFault($e);
+        }
+    }
+
+    /**
+     * Converts an exception thrown by the provider into a SOAP fault sent to the client.
+     *
+     * SoapFault is sent as is; the message of {@link UserException} is shown to the client.
+     * Other exceptions are logged and reported as "Internal server error",
+     * unless YII_DEBUG is on, in which case the message and the trace are sent.
+     * @param \Throwable $e
+     * @return \SoapFault
+     */
+    protected function createFault($e)
+    {
+        if ($e instanceof \SoapFault) {
+            return $e;
+        }
+        if (!$e instanceof UserException) {
+            Yii::error((string)$e, __METHOD__);
+        }
+        $code = (new \ReflectionClass($e))->getShortName();
+        if (YII_DEBUG) {
+            $message = $e->getMessage() . ' (' . $e->getFile() . ':' . $e->getLine() . ")\n" . $e->getTraceAsString();
+        } elseif ($e instanceof UserException) {
+            $message = $e->getMessage();
+        } else {
+            $code = 'Server';
+            $message = 'Internal server error';
+        }
+        return new \SoapFault($code, $message);
+    }
+
+    /**
+     * @param \SoapFault $fault
+     * @return string SOAP envelope with the fault
+     */
+    protected function renderFault($fault)
+    {
+        $code = htmlspecialchars((string)$fault->faultcode, ENT_XML1 | ENT_QUOTES, 'UTF-8');
+        $message = htmlspecialchars((string)$fault->getMessage(), ENT_XML1 | ENT_QUOTES, 'UTF-8');
+        if ($this->soapVersion === '1.2') {
+            return '<?xml version="1.0" encoding="UTF-8"?>'
+                . '<env:Envelope xmlns:env="http://www.w3.org/2003/05/soap-envelope"><env:Body><env:Fault>'
+                . '<env:Code><env:Value>env:Receiver</env:Value></env:Code>'
+                . '<env:Reason><env:Text xml:lang="en">' . $message . '</env:Text></env:Reason>'
+                . '</env:Fault></env:Body></env:Envelope>';
+        }
+        if (strpos($code, ':') === false && in_array($code, ['Server', 'Client', 'VersionMismatch', 'MustUnderstand'], true)) {
+            $code = 'SOAP-ENV:' . $code;
+        }
+        return '<?xml version="1.0" encoding="UTF-8"?>'
+            . '<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"><SOAP-ENV:Body><SOAP-ENV:Fault>'
+            . '<faultcode>' . $code . '</faultcode><faultstring>' . $message . '</faultstring>'
+            . '</SOAP-ENV:Fault></SOAP-ENV:Body></SOAP-ENV:Envelope>';
+    }
+
+    /**
+     * @param object $provider
+     * @return object the object passed to SoapServer::setObject()
+     */
+    protected function createProviderWrapper($provider)
+    {
+        if (is_array($this->generatorConfig) && isset($this->generatorConfig['bindingStyle'])
+            && $this->generatorConfig['bindingStyle'] === 'document'
+        ) {
+            return new DocumentSoapObjectWrapper($provider, ['service' => $this]);
+        }
+        return new SoapObjectWrapper($provider, $this);
+    }
+
+    /**
+     * @return string|null the Content-Type header set by SoapServer
+     */
+    private function getSentContentType()
+    {
+        foreach (array_reverse(headers_list()) as $header) {
+            if (stripos($header, 'Content-Type:') === 0) {
+                return trim(substr($header, 13));
+            }
+        }
+        return null;
     }
 
     /**
